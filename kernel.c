@@ -6,7 +6,10 @@ extern kprint(char *);
  
 void kmain(void)
 {
-   //extern void *mbd;
+   int i;
+   char blank_str[80];
+
+   /*extern void *mbd;*/
  
    if ( magic != 0x2BADB002 )
    {
@@ -16,12 +19,20 @@ void kmain(void)
       return;
    }
  
-   /* You could either use multiboot.h */
-   /* (http://www.gnu.org/software/grub/manual/multiboot/multiboot.html#multiboot_002eh) */
-   /* or do your offsets yourself. The following is merely an example. */ 
-   //char * boot_loader_name =(char*) ((long*)mbd)[16];
- 
-   /* Print a letter to screen to see everything is working: */
-   kprint("Hello, world!\n");
+   for(i = 0; i < 80; i++){
+      blank_str[i] = ' ';
+   }
+   for(i = 0; i < 25; i++){
+      kprint(blank_str);
+   }
+   
+   kprint("Hello, world!");
    kprint("Testing...");
+
+   __asm__("int $0x0080");
+   kprint("interrupt finished");
+}
+
+void interrupt_handler(void){
+   kprint("Kernel interrupt");
 }

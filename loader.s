@@ -55,3 +55,9 @@ hang:
     hlt                                 # halt machine should kernel return
     jmp   hang
 
+.global interrupt_entry
+interrupt_entry:
+    pusha
+    call interrupt_handler
+    popa
+    iret
