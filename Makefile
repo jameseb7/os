@@ -8,16 +8,20 @@ WARNINGS := -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align \
             -Wuninitialized -Wconversion -Wstrict-prototypes 
 CFLAGS := -g -ffreestanding $(WARNINGS)
 
+OBJECTS := loader.o kernel.o output.o gdt.o idt.o memory.o
+
 DISK := floppy.img
 LOOP := /dev/loop0
 MNT  := /mnt/floppy
+
+
 
 .PHONY: all install
 
 all: kernel.bin
 
-kernel.bin: linker.ld loader.o kernel.o output.o gdt.o idt.o
-	@$(LD) -T linker.ld -o $@ loader.o kernel.o output.o gdt.o idt.o
+kernel.bin: linker.ld $(OBJECTS)
+	@$(LD) -T linker.ld -o $@ $(OBJECTS)
 
 loader.o: loader.s
 	@$(AS) -o $@ $<

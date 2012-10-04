@@ -48,6 +48,13 @@ gdt_jump:
     lidt idtr
     sti
 
+    call make_page_directory
+    movl page_directory, %eax
+    movl %eax, %cr3
+    movl %cr0, %eax
+    orl  $0x80000000, %eax
+    movl %eax, %cr0
+
     call  kmain                         # call kernel proper
 
     cli
