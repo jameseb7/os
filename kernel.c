@@ -31,6 +31,8 @@ void kmain(void)
 
    __asm__("int $0x0080");
    kprint("interrupt finished");
+
+   kprint(intptr_to_hex_string(0x123ABC0F));
 }
 
 void interrupt_handler(void){
