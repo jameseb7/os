@@ -19,22 +19,16 @@ void kmain(void)
       return;
    }
  
-   for(i = 0; i < 80; i++){
-      blank_str[i] = ' ';
-   }
-   for(i = 0; i < 25; i++){
-      kprint(blank_str);
-   }
+   clear_screen();
    
-   kprint("Hello, world!");
-   kprint("Testing...");
+   kprintln("Hello, world!");
 
    __asm__("int $0x0080");
-   kprint("interrupt finished");
 
+   kprint("hex pointer:");
    kprint(intptr_to_hex_string(0x123ABC0F));
 }
 
 void interrupt_handler(void){
-   kprint("Kernel interrupt");
+   kprintln("Kernel interrupt");
 }
