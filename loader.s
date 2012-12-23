@@ -48,6 +48,10 @@ gdt_jump:
     lidt idtr
     sti
 
+    call index_pages
+    cli
+    jmp hang
+	
     call make_page_directory
     movl page_directory, %eax
     movl %eax, %cr3

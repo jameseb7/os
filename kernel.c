@@ -25,8 +25,8 @@ void kmain(void)
 
    __asm__("int $0x0080");
 
-   kprint("hex pointer:");
-   kprint(intptr_to_hex_string(0x123ABC0F));
+   kprint("hex: ");
+   kprint(uint32_to_hex_string(0x123ABC0F));
 }
 
 void interrupt_handler(void){
