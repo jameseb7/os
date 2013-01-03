@@ -1,13 +1,13 @@
 #include <stdint.h>
+#include "kernel.h"
 
 extern uint32_t magic;
 
-extern kprint(char *);
+void kmain(void);
+void interrupt_handler(void);
+
  
-void kmain(void)
-{
-   int i;
-   char blank_str[80];
+void kmain(){
 
    /*extern void *mbd;*/
  

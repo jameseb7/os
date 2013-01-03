@@ -44,7 +44,7 @@ typedef struct {
    uint8_t  drive_heads;
    uint8_t  drive_sectors;
 
-   uint8_t drive_ports[];
+   uint8_t drive_ports[1];
 } drives;
 
 typedef struct {

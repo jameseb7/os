@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include "kernel.h"
+
 struct IDT_entry{
    uint16_t offset_low;
    uint16_t selector;

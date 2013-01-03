@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "kernel.h"
 
 struct GDT_entry{
    uint16_t limit_low;        /*Limit 0:15*/
@@ -56,9 +57,9 @@ struct TSS{
    uint16_t IOPB_offset;
 };
 
-struct GDT_entry * gdt = 0x00000500;
+struct GDT_entry * gdt = (struct GDT_entry *) 0x00000500;
 uint16_t gdt_size;
-struct TSS * tss = 0x00000600;
+struct TSS * tss = (struct TSS *) 0x00000600;
 
 extern uint32_t stack;
 

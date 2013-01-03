@@ -1,32 +1,38 @@
-
 #include <stdint.h>
+#include "kernel.h"
 
-int write_screen(char * str,
-                  unsigned char foreclr, unsigned char backclr,
-                  unsigned int x, unsigned int y){
-   int i; /*string index*/
-   volatile unsigned char * videoram = (unsigned char *) 0xB8000;
+static volatile char * videoram = (char *) 0xB8000;
+static unsigned int current_row = 0;
+static unsigned int current_col = 0;
+
+static char parse_nybble(uint8_t);
+
+unsigned int write_screen(const char * str,
+			  char foreclr, char backclr,
+			  unsigned int x, unsigned int y){
+   unsigned int i; /*string index*/
 
    for(i = 0; str[i] != '\0'; i++){
       videoram[2*(80*y + x + i)] = str[i];
-      videoram[2*(80*y + x + i) + 1] = (backclr << 4) | (foreclr & 0x0F);
+      foreclr = (char) foreclr & ((char) 0x0F);
+      backclr = (char) (backclr << 4);
+      videoram[2*(80*y + x + i) + 1] = backclr | foreclr;
    }
    return i;
 }
 
 void clear_screen(){
-   int i, j;
+   unsigned int i, j;
    for(i = 0; i < 80; i++){
       for(j = 0; j < 25; j++){
          write_screen(" ", 0x07, 0x00, i, j);
       }
    }
+   current_row = 0;
+   current_col = 0;
 }
 
-static unsigned int current_row = 0;
-static unsigned int current_col = 0;
-
-void kprint(char * str){
+void kprint(const char * str){
    current_col += write_screen(str, 0x07, 0x00, current_col, current_row);
    if(current_col >= 80){
       current_col = 0;
@@ -34,14 +40,14 @@ void kprint(char * str){
    }
 }
    
-void kprintln(char * str){
+void kprintln(const char * str){
    write_screen(str, 0x07, 0x00, current_col, current_row);
    current_row++;
    current_col = 0;
    if(current_row >= 25) current_row = 0;
 }
 
-char parse_nybble(uint8_t nybble){
+static char parse_nybble(uint8_t nybble){
   switch(nybble & 0x0F){
   case 0x0:
     return '0';
@@ -97,7 +103,7 @@ char parse_nybble(uint8_t nybble){
 }
 
 char * uint32_to_hex_string(uint32_t input){
-   char * output = 0x00007E00;
+   char * output = (char *) 0x00007E00;
    int i;
    
    output[0] = '0';
@@ -113,7 +119,7 @@ char * uint32_to_hex_string(uint32_t input){
 }
 
 char * uint64_to_hex_string(uint64_t input){
-   char * output = 0x00007E00;
+  char * output = (char *) 0x00007E00;
    int i;
    
    output[0] = '0';

@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "multiboot.h"
+#include "kernel.h"
 
 #define PDE_PRESENT       1 << 0
 #define PDE_WRITEABLE     1 << 1
@@ -18,8 +19,7 @@
 #define PTE_DIRTY         1 << 6
 #define PTE_GLOBAL        1 << 8
 
-uint32_t * page_directory = 0x00001000;
-uint32_t * page_table;
+uint32_t * page_directory = (uint32_t *) 0x00001000;
 
 extern uint32_t magic;
 extern multiboot_data * mbd;
@@ -62,12 +62,11 @@ void index_pages(){
 
 void make_page_directory(){
    int i;
+   uint32_t * page_table = (uint32_t *) 0x00002000;
 
-   page_directory[0] = 0x00002000 | PDE_PRESENT | PDE_WRITEABLE;
+   page_directory[0] = ((uint32_t)page_table) | PDE_PRESENT | PDE_WRITEABLE;
    for(i = 1; i < 1023; i++) page_directory[i] = 0x00000000;
    page_directory[1023] = ((uint32_t) page_directory) | PDE_PRESENT | PDE_WRITEABLE;
-
-   page_table = 0x00002000;
 
    /*set up identity paging for the first two megabytes*/
    for(i = 0; i < 512; i++) page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
