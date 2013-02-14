@@ -84,11 +84,33 @@ void index_pages(){
       *page = (uint32_t) page_stack;
       page_stack = page;
     }
-
   }
-  kprintln(uint32_to_hex_string((uint32_t) m));
 }
-   
+
+void allocate_physical_page(uint32_t virtual_page_address){
+  uint32_t page_directory_index = virtual_page_address & 0xFFC00000;
+  uint32_t page_table_index = virtual_page_address & 0x003FF000;
+  uint32_t * page_table;
+  int i;
+
+  if(page_stack == 0){
+    /*TODO: add code to handle having no pages left*/
+  }
+
+  if((page_directory[page_directory_index] & PDE_PRESENT) == 0){
+    page_table = page_stack;
+    page_stack = (uint32_t *) *page_stack;
+    page_directory[page_directory_index] = (uint32_t) page_table | PDE_PRESENT | PDE_WRITEABLE;
+    
+    for(i = 0; i < 1024; i++){
+      page_table[i] = 0x00000000;
+    }
+  }
+  
+  page_table[page_table_index] = (uint32_t) page_stack;
+  page_stack = (uint32_t *) *page_stack;
+  
+}
 
 void make_page_directory(){
    int i;
@@ -99,6 +121,7 @@ void make_page_directory(){
 
    /*set up identity paging for the first two megabytes*/
    for(i = 0; i < 512; i++) first_page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
+   for(; i < 1024; i++) first_page_table[i] = 0x00000000;
 }
 
  
