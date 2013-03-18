@@ -41,22 +41,7 @@ void index_pages(){
     return;
   }
 
-  clear_screen();
-
-  kprintln(uint32_to_hex_string(mbd->mmap_length));
-  kprintln(uint32_to_hex_string(mbd->mmap_addr));
-  kprintln(uint32_to_hex_string((uint32_t) m));
-  kprintln(uint32_to_hex_string((uint32_t) mmap_end));
   for(; m < mmap_end; m = (mmap*) (((uint32_t) m) + m->size + 4)){
-    kprint(uint32_to_hex_string((uint32_t) m));
-    kprint(": ");
-    kprint(uint32_to_hex_string(m->size));
-    kprint(" ");
-    kprint(uint64_to_hex_string(m->base_addr));
-    kprint(" ");
-    kprint(uint64_to_hex_string(m->length));
-    kprint(" ");
-    kprintln(uint32_to_hex_string(m->type));
     
     /*skip unusable blocks*/
     if(m->type != 1) continue;
@@ -88,13 +73,17 @@ void index_pages(){
 }
 
 void allocate_physical_page(uint32_t virtual_page_address){
-  uint32_t page_directory_index = virtual_page_address & 0xFFC00000;
-  uint32_t page_table_index = virtual_page_address & 0x003FF000;
+  uint32_t page_directory_index = (virtual_page_address & 0xFFC00000) >> 22;
+  uint32_t page_table_index = (virtual_page_address & 0x003FF000) >> 12;
   uint32_t * page_table;
   int i;
 
+  kprintln("ALLOCATION FUNCTION STARTED");
+
   if(page_stack == 0){
     /*TODO: add code to handle having no pages left*/
+    kprintln("ERROR: PAGE STACK EMPTY");
+    return;
   }
 
   if((page_directory[page_directory_index] & PDE_PRESENT) == 0){
@@ -105,19 +94,21 @@ void allocate_physical_page(uint32_t virtual_page_address){
     for(i = 0; i < 1024; i++){
       page_table[i] = 0x00000000;
     }
+  }else{
+    page_table = (uint32_t *) (page_directory[page_directory_index] & 0xFFFFF000);
   }
   
-  page_table[page_table_index] = (uint32_t) page_stack;
-  page_stack = (uint32_t *) *page_stack;
+  page_table[page_table_index] = ((uint32_t) page_stack) | PTE_PRESENT | PTE_WRITEABLE;
+  page_stack = (uint32_t *) *((uint32_t *) (virtual_page_address & 0xFFFFF000)) ;
   
 }
 
 void make_page_directory(){
    int i;
 
-   page_directory[0] = ((uint32_t) first_page_table) | PDE_PRESENT | PDE_WRITEABLE;
+   page_directory[0] = ((uint32_t) &first_page_table) | PDE_PRESENT | PDE_WRITEABLE;
    for(i = 1; i < 1023; i++) page_directory[i] = 0x00000000;
-   page_directory[1023] = ((uint32_t) page_directory) | PDE_PRESENT | PDE_WRITEABLE;
+   page_directory[1023] = ((uint32_t) &page_directory) | PDE_PRESENT | PDE_WRITEABLE;
 
    /*set up identity paging for the first two megabytes*/
    for(i = 0; i < 512; i++) first_page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
