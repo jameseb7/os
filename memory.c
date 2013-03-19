@@ -75,10 +75,8 @@ void index_pages(){
 void allocate_physical_page(uint32_t virtual_page_address){
   uint32_t page_directory_index = (virtual_page_address & 0xFFC00000) >> 22;
   uint32_t page_table_index = (virtual_page_address & 0x003FF000) >> 12;
-  uint32_t * page_table;
+  uint32_t * page_table = (uint32_t *) (((uint32_t) 1023 << 22) | (page_directory_index << 12));
   int i;
-
-  kprintln("ALLOCATION FUNCTION STARTED");
 
   if(page_stack == 0){
     /*TODO: add code to handle having no pages left*/
@@ -87,15 +85,12 @@ void allocate_physical_page(uint32_t virtual_page_address){
   }
 
   if((page_directory[page_directory_index] & PDE_PRESENT) == 0){
-    page_table = page_stack;
-    page_stack = (uint32_t *) *page_stack;
-    page_directory[page_directory_index] = (uint32_t) page_table | PDE_PRESENT | PDE_WRITEABLE;
-    
+    page_directory[page_directory_index] = (uint32_t) page_stack | PDE_PRESENT | PDE_WRITEABLE;
+    page_stack = (uint32_t *) *page_table;
+
     for(i = 0; i < 1024; i++){
       page_table[i] = 0x00000000;
     }
-  }else{
-    page_table = (uint32_t *) (page_directory[page_directory_index] & 0xFFFFF000);
   }
   
   page_table[page_table_index] = ((uint32_t) page_stack) | PTE_PRESENT | PTE_WRITEABLE;
