@@ -63,6 +63,20 @@ void kmain(){
   ptr = (char *) 0x02000000;
   kprintln(ptr);
 
+  free_physical_page(0x00300000);
+  free_physical_page(0x00300000);
+  allocate_physical_page(0x00300000);
+
+
+  ptr = (char *) 0x00300102;
+  *ptr = 'G';
+  ptr = (char *) 0x00300103;
+  *ptr = '\0';
+
+  ptr = (char *) 0x003000FF;
+  kprintln(ptr);
+  ptr = (char *) 0x00300102;
+  kprintln(ptr);
 }
 
 void interrupt_handler(void){

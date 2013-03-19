@@ -78,12 +78,14 @@ void allocate_physical_page(uint32_t virtual_page_address){
   uint32_t * page_table = (uint32_t *) (((uint32_t) 1023 << 22) | (page_directory_index << 12));
   int i;
 
+  /*check there are pages in the page stack*/
   if(page_stack == 0){
     /*TODO: add code to handle having no pages left*/
     kprintln("ERROR: PAGE STACK EMPTY");
     return;
   }
 
+  /*make a page table if there isn't one*/
   if((page_directory[page_directory_index] & PDE_PRESENT) == 0){
     page_directory[page_directory_index] = (uint32_t) page_stack | PDE_PRESENT | PDE_WRITEABLE;
     page_stack = (uint32_t *) *page_table;
@@ -94,8 +96,27 @@ void allocate_physical_page(uint32_t virtual_page_address){
   }
   
   page_table[page_table_index] = ((uint32_t) page_stack) | PTE_PRESENT | PTE_WRITEABLE;
-  page_stack = (uint32_t *) *((uint32_t *) (virtual_page_address & 0xFFFFF000)) ;
-  
+  page_stack = (uint32_t *) *((uint32_t *) (virtual_page_address & 0xFFFFF000)) ;  
+}
+
+void free_physical_page(uint32_t virtual_page_address){
+  uint32_t page_directory_index = (virtual_page_address & 0xFFC00000) >> 22;
+  uint32_t page_table_index = (virtual_page_address & 0x003FF000) >> 12;
+  uint32_t * page_table = (uint32_t *) (((uint32_t) 1023 << 22) | (page_directory_index << 12));
+
+  /*check the page is allocated*/
+  if((page_directory[page_directory_index] & PDE_PRESENT) == 0){
+    kprintln("PAGE TABLE NOT PRESENT");
+    return;
+  }
+  if((page_table[page_table_index] & PTE_PRESENT) == 0){
+    kprintln("PAGE NOT PRESENT");
+    return;
+  }
+
+  *((uint32_t *) (virtual_page_address & 0xFFFFF000)) = (uint32_t) page_stack;
+  page_stack = (uint32_t *) (virtual_page_address & 0xFFFFF000);
+  page_table[page_table_index] = 0x00000000;
 }
 
 void make_page_directory(){

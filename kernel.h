@@ -19,5 +19,6 @@ void make_page_directory(void);
 
 /*memory allocation functions*/
 void allocate_physical_page(uint32_t);
+void free_physical_page(uint32_t);
 
 #endif /*KERNEL_H*/
