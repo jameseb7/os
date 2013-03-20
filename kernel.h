@@ -16,6 +16,7 @@ void make_gdt(void);
 void make_idt(void);
 void index_pages(void);
 void make_page_directory(void);
+void setup_virtual_page_allocator(void);
 
 /*memory allocation functions*/
 void allocate_physical_page(uint32_t);
