@@ -57,6 +57,8 @@ gdt_jump:
     orl  $0x80000000, %eax
     movl %eax, %cr0
 
+    call setup_virtual_page_allocator
+
     call kmain                         # call kernel proper
 
     cli
