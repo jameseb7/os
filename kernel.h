@@ -21,5 +21,6 @@ void setup_virtual_page_allocator(void);
 /*memory allocation functions*/
 void allocate_physical_page(uint32_t);
 void free_physical_page(uint32_t);
+void * allocate_virtual_pages(int);
 
 #endif /*KERNEL_H*/
