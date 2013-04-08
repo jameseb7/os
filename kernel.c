@@ -22,61 +22,31 @@ void kmain(){
   }
   
   clear_screen();
- 
-  allocate_physical_page(0x00300000);
 
-  ptr = (char *) 0x00300000;
-  *ptr = 'A';
-  ptr = (char *) 0x00300001;
-  *ptr = '\0';
+  ptr = allocate_virtual_pages(1);
 
-  ptr = (char *) 0x00300000;
+  /*return;*/
+
+  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  ptr[0] = 'A';
+  ptr[1] = 'B';
+  ptr[2] = 'C';
+  ptr[3] = '\0';
   kprintln(ptr);
 
-  ptr = (char *) 0x003000FF;
-  *ptr = 'B';
-  ptr = (char *) 0x00300100;
-  *ptr = 'C';
-  ptr = (char *) 0x00300101;
-  *ptr = 'D';
-  ptr = (char *) 0x00300102;
-  *ptr = '\0';
+  ptr = allocate_virtual_pages(8);
+  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  ptr[4096*8 - 3] = 'D';
+  ptr[4096*8 - 2] = 'E';
+  ptr[4096*8 - 1] = '\0';
+  kprintln(ptr + 4096*8 - 3);
 
-  ptr = (char *) 0x003000FF;
-  kprintln(ptr);
-  
-  allocate_physical_page(0x01000000);
-  ptr = (char *) 0x01000000;
-  *ptr = 'E';
-  ptr++;
-  *ptr = '\0';
-
-  ptr = (char *) 0x01000000;
-  kprintln(ptr);
-
-  allocate_physical_page(0x02000000);
-  ptr = (char *) 0x02000000;
-  *ptr = 'F';
-  ptr++;
-  *ptr = '\0';
-
-  ptr = (char *) 0x02000000;
-  kprintln(ptr);
-
-  free_physical_page(0x00300000);
-  free_physical_page(0x00300000);
-  allocate_physical_page(0x00300000);
-
-
-  ptr = (char *) 0x00300102;
-  *ptr = 'G';
-  ptr = (char *) 0x00300103;
-  *ptr = '\0';
-
-  ptr = (char *) 0x003000FF;
-  kprintln(ptr);
-  ptr = (char *) 0x00300102;
-  kprintln(ptr);
+  ptr = allocate_virtual_pages(6);
+  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  ptr[4096*8 - 3] = 'F';
+  ptr[4096*8 - 2] = 'G';
+  ptr[4096*8 - 1] = '\0';
+  kprintln(ptr + 4096*8 - 3);
 }
 
 void interrupt_handler(void){
