@@ -17,7 +17,7 @@ struct free_record{
 
 /*structure for storing information about a block of virtual pages*/
 struct page_record{
-  uint8_t * address_size; /*address 31-12, (log(size)-12) 7-3, flags 0-2*/
+  uint32_t address_size; /*address 31-12, (log(size)-12) 7-3, flags 0-2*/
   struct page_record * next;
 };
 
@@ -28,12 +28,11 @@ struct tree_record{
 };
 
 void add_to_tree(struct page_record *, struct tree_record *);
-void remove_from_tree(struct page_record *, struct tree_record *);
+/*struct page_record * get_from_tree(uint32_t, struct tree_record *);*/
 
 struct free_record * free_records = (struct free_record *) 0x00008000;
 struct page_record * free_pages_by_size[20];
-struct tree_record * allocated_pages_by_address = (struct tree_record *) 0x00000000;
-struct tree_record * free_pages_by_address = (struct tree_record *) 0x00000000;
+struct tree_record * pages_by_address;
 
 void setup_virtual_page_allocator(){
   struct free_record * current_free_record = (struct free_record *) 0x00008000;
@@ -63,15 +62,15 @@ void setup_virtual_page_allocator(){
   /*pop a record from the free records and record the allocatable space in the second 2MiB*/
   free_pages_by_size[9] = (struct page_record *) free_records;
   free_records = free_records->next;
-  free_pages_by_size[9]->address_size = (uint8_t *) (0x00200000 | (9 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD);
+  free_pages_by_size[9]->address_size = 0x00200000 | (9 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
   free_pages_by_size[9]->next = 0x00000000;
 
   /*divide the rest of the memory into 4MiB chunks for allocation*/
   free_pages_by_size[10] = (struct page_record *) free_records;
   free_records = free_records->next;
   current_page_record = free_pages_by_size[10]; 
-  for(address = (1 << 22); address < (uint32_t) (1022 << 22) ; address += (1 << 22)){
-    current_page_record->address_size = (uint8_t *) (address | (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD);
+  for(address = (1 << 22); address < (uint32_t) (1022 << 22); address += (1 << 22)){
+    current_page_record->address_size = address | (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
 
     next_page_record = (struct page_record *) free_records;
     free_records = free_records->next;
@@ -79,48 +78,43 @@ void setup_virtual_page_allocator(){
 
     current_page_record = next_page_record;
   }
-  current_page_record->address_size = (uint8_t *) (address | (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD);
+  current_page_record->address_size = address | (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
   current_page_record->next = 0x00000000;
   
   /*make root of tree by address*/
-  free_pages_by_address = (struct tree_record *) free_records;
+  pages_by_address = (struct tree_record *) free_records;
   free_records = free_records->next;
-  current_tree_record = free_pages_by_address;
+  current_tree_record = pages_by_address;
   current_tree_record->left = (struct tree_record *) (0x00000000 | FLAG_USED_RECORD);
   current_tree_record->right = (struct tree_record *) 0x00000000;
 
-  /*put the unallocated record list of size 10 into a tree by address*/
+  /*put the unallocated record list of size 10 into the tree by address*/
   for(current_page_record = free_pages_by_size[10]; current_page_record != 0x00000000; current_page_record = current_page_record->next){
-    add_to_tree(current_page_record, free_pages_by_address);
+    add_to_tree(current_page_record, pages_by_address);
   }
 
-  /*put the unallocated record list of size 9 into a tree by address*/
+  /*put the unallocated record list of size 9 into the tree by address*/
   current_page_record = free_pages_by_size[9];
-  add_to_tree(current_page_record, free_pages_by_address);
-  
-  /*make allocated record tree*/
-  allocated_pages_by_address = (struct tree_record *) free_records;
-  free_records = free_records->next;
-  allocated_pages_by_address->left = (struct tree_record *) (0x00000000 | FLAG_USED_RECORD);
-  allocated_pages_by_address->right = (struct tree_record *) 0x00000000;
+  add_to_tree(current_page_record, pages_by_address);
 }
 
 void add_to_tree(struct page_record * page_block, struct tree_record * tree_root){
   struct tree_record * current_tree_record = tree_root;
-  uint32_t address = (uint32_t) PAGE_ADDRESS(page_block->address_size);
-  uint32_t size = (uint32_t) PAGE_SIZE(page_block->address_size) + 12;
+  uint32_t address = PAGE_ADDRESS(page_block->address_size);
+  uint32_t size = PAGE_SIZE(page_block->address_size) + 12;
   unsigned int level;
 
   for(level = 31; level > size; level--){
     if(((address >> level) % 2) == 0){
+      /* kprint("left "); */
       /*look at the left subtree*/
-      if(((uint32_t) RECORD_ADDRESS(current_tree_record->left)) == 0x00000000){
+      if(((uint32_t) RECORD_ADDRESS(current_tree_record->left)) == 0){
 	/*make nonexistent left branch*/
-	current_tree_record->left = (struct tree_record *) ((uint32_t) free_records | FLAG_USED_RECORD);
 	if(free_records == 0){
 	  kprintln("ERROR: NO FREE RECORDS LEFT");
-	  return;
+	  halt();
 	}
+	current_tree_record->left = (struct tree_record *) ((uint32_t) free_records | FLAG_USED_RECORD);
 	free_records = free_records->next;
 	current_tree_record = (struct tree_record *) RECORD_ADDRESS(current_tree_record->left);
 	
@@ -130,12 +124,13 @@ void add_to_tree(struct page_record * page_block, struct tree_record * tree_root
 	current_tree_record = (struct tree_record *) RECORD_ADDRESS(current_tree_record->left);
       }
     }else{
+      /* kprint("right "); */
       /*look at the right subtree*/
-      if(current_tree_record->right == 0x00000000){
+      if(current_tree_record->right == 0){
 	/*make nonexistent right branch*/
 	if(free_records == 0){
 	  kprintln("ERROR: NO FREE RECORDS LEFT");
-	  return;
+	  halt();
 	}
 	current_tree_record->right = (struct tree_record *) free_records;
 	free_records = free_records->next;
@@ -156,37 +151,13 @@ void add_to_tree(struct page_record * page_block, struct tree_record * tree_root
   }
 }
 
-
-void remove_from_tree(struct page_record * page_block, struct tree_record * tree_root){
-  struct tree_record * current_tree_record = tree_root;
-  uint32_t address = PAGE_ADDRESS(page_block->address_size);
-  uint32_t size = PAGE_SIZE(page_block->address_size) + 12;
-  unsigned int level;
-
-  for(level = 31; level > size; level--){
-    if(((address >> level) % 2) == 0){
-      /*look at the left subtree*/
-      current_tree_record = (struct tree_record *) RECORD_ADDRESS(current_tree_record->left);
-    }else{
-      /*look at the right subtree*/
-      current_tree_record = current_tree_record->right;
-    }
-  }
-
-  if(((address >> level) % 2) == 0){
-    current_tree_record->left = (struct tree_record *) (0x00000000 | FLAG_USED_RECORD);
-  }else{
-    current_tree_record->right = (struct tree_record *) 0x00000000;
-  }
-}
-
-
 void * allocate_virtual_pages(int number_of_pages){
   int i;
   int shift_number, larger_shift;
   uint32_t address;
   struct page_record * page_block;
   struct page_record * spare_page_block;
+  struct tree_record * tree_node;
 
   /*can't allocate bigger pages than the number of lists allows*/
   if(number_of_pages > (1 << 19)){
@@ -215,13 +186,7 @@ void * allocate_virtual_pages(int number_of_pages){
     free_pages_by_size[shift_number] = free_pages_by_size[shift_number]->next;
 
     /*mark the page block as used*/
-    page_block->address_size = (uint8_t *) ((uint32_t) page_block->address_size | FLAG_USED_PAGES);
-
-    /*remove the page block record from the free pages tree*/
-    remove_from_tree(page_block, free_pages_by_address);
-
-    /*add the page block record to the allocated pages tree*/
-    add_to_tree(page_block, allocated_pages_by_address);
+    page_block->address_size = page_block->address_size | FLAG_USED_PAGES;
   }else{
     /*if there isn't a block of the correct size, search for a larger block that could be broken up*/
     for(larger_shift = shift_number+1; larger_shift < 20; larger_shift++){
@@ -233,38 +198,47 @@ void * allocate_virtual_pages(int number_of_pages){
     page_block = free_pages_by_size[larger_shift];
     free_pages_by_size[larger_shift] = free_pages_by_size[larger_shift]->next;
 
-    /*remove this block from the free block tree*/
-    remove_from_tree(page_block, free_pages_by_address);
-
-    /*break up the block and put the spare blocks in the free blocks tree*/
+    /*break up the block and put the spare blocks in the tree*/
     for(i = larger_shift; i > shift_number; i--){
-      /*get a free record for the second half of the page block*/
-      if(free_records == 0){
+      /*change the page block record into a tree record and store the address_size*/
+      tree_node = (struct tree_record *) page_block;
+      address = page_block->address_size;
+
+      /*put new records on each branch of the tree node*/
+      if(free_records->next == 0){
 	kprintln("ERROR: NO FREE RECORDS LEFT");
-	return 0;
+	halt();
       }
-      spare_page_block = (struct page_record *) free_records;
+      tree_node->left = (struct tree_record *) ((uint32_t) free_records | FLAG_USED_RECORD);
       free_records = free_records->next;
+      tree_node->right = (struct tree_record *) free_records;
+      free_records = free_records->next;
+
+      /*check which branch the page bock needs to be on*/
+      if(((PAGE_ADDRESS(address) >> (12+i-1)) % 2) == 0){
+	/*put the page block on the left branch and spare page block on the right*/
+	page_block = (struct page_record *) RECORD_ADDRESS(tree_node->left);
+	page_block->address_size = address;
+	spare_page_block = (struct page_record *) RECORD_ADDRESS(tree_node->right);
+      }else{
+	/*put the page block on the right branch and spare page block on the left*/
+	page_block = (struct page_record *) RECORD_ADDRESS(tree_node->right);
+	page_block->address_size = address;
+	spare_page_block = (struct page_record *) RECORD_ADDRESS(tree_node->left);
+      }
 	
       /*set up the spare page block as the second half of the current page block*/
-      spare_page_block->address_size = (uint8_t *) ((PAGE_ADDRESS(page_block->address_size) + (uint32_t) (1 << (i+11))) 
-						    | (uint32_t) ((i-1) << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD);
+      spare_page_block->address_size = (PAGE_ADDRESS(page_block->address_size) + (uint32_t) (1 << (i-1+12))) 
+	| (uint32_t) ((i-1) << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
       spare_page_block->next = free_pages_by_size[i-1];
       free_pages_by_size[i-1] = spare_page_block;
 
       /*reduce the page block's size by half*/
-      page_block->address_size = (uint8_t *) (((uint32_t) page_block->address_size & 0xFFFFF007) | (uint32_t) ((i-1) << 3));
-      
-      /*put the spare page block in the free page block tree*/
-      add_to_tree(spare_page_block, free_pages_by_address);
-
+      page_block->address_size = (page_block->address_size & 0xFFFFF007) | (uint32_t) ((i-1) << 3);
     }
 
     /*mark the page block as used*/
-    page_block->address_size = (uint8_t *) ((uint32_t) page_block->address_size | FLAG_USED_PAGES);
-
-    /*put the page block into the allocated pages tree*/
-    add_to_tree(page_block, allocated_pages_by_address);
+    page_block->address_size = page_block->address_size | FLAG_USED_PAGES;
   }
   
   /*allocate the physical pages to the virtual pages*/

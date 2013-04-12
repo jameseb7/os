@@ -1,6 +1,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+void halt(void);
+
 /*output functions*/
 unsigned int write_screen(const char * str,
 		 char foreclr, char backclr,

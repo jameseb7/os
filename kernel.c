@@ -49,6 +49,13 @@ void kmain(){
   kprintln(ptr + 4096*8 - 3);
 }
 
+void halt(){
+  asm("cli");
+  for(;;){
+    asm("hlt");
+  }
+}
+
 void interrupt_handler(void){
    kprintln("Kernel interrupt");
 }
