@@ -8,6 +8,7 @@ void interrupt_handler(void);
 
 void kmain(){
   char * ptr;
+  int temp = 0;
     /*extern void *mbd;*/
 
   kprintln("KERNEL STARTED");
@@ -47,6 +48,8 @@ void kmain(){
   ptr[4096*8 - 2] = 'G';
   ptr[4096*8 - 1] = '\0';
   kprintln(ptr + 4096*8 - 3);
+
+  temp = 1/temp;
 }
 
 void halt(){

@@ -8,7 +8,7 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
             -Wuninitialized -Wconversion -Wstrict-prototypes 
 CFLAGS := -g -ffreestanding $(WARNINGS)
 
-OBJECTS := loader.o kernel.o output.o gdt.o idt.o physical_memory.o virtual_memory.o
+OBJECTS := loader.o kernel.o output.o gdt.o idt.o interrupts.o interrupt_handlers.o physical_memory.o virtual_memory.o
 
 DISK := floppy.img
 LOOP := /dev/loop0
@@ -25,6 +25,10 @@ kernel.bin: linker.ld $(OBJECTS)
 
 loader.o: loader.s
 	@$(AS) -o $@ $<
+
+interrupts.o: interrupts.s
+	@$(AS) -o $@ $<
+
 %.o: %.c
 	@$(CC) $(CFLAGS) -o $@ -c $<
 

@@ -24,17 +24,22 @@
 .comm  idtr, 6
 
 loader:
+    cli	
     movl  $(stack + STACKSIZE), %esp    # set up the stack
     movl  %eax, magic                   # Multiboot magic number
     movl  %ebx, mbd                     # Multiboot data structure
-
-    cli
+	
     call make_gdt
     movw gdt_size, %ax
     movw %ax, gdtr
     movl gdt, %eax
     movl %eax, gdtr+2
     lgdt gdtr
+    movw $0x10, %ax
+    movw %ax, %ds
+    movw %ax, %ss
+    movw %ax, %es
+    movw %ax, %fs
     ljmp $0x08, $gdt_jump
 gdt_jump:
     movw $0x18, %ax
@@ -46,7 +51,6 @@ gdt_jump:
     movl idt, %eax
     movl %eax, idtr+2
     lidt idtr
-    sti
 
     call index_pages
 	
