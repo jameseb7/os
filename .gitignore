@@ -1,0 +1,13 @@
+#start by ignoring everything
+*
+!.gitignore
+
+#track C files
+!*.h
+!*.c
+
+#track assembly files
+!*.s
+
+#track Makefile
+!Makefile

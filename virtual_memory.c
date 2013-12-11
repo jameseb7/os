@@ -12,23 +12,29 @@
 /*structure for list of unused memory allocator records*/
 struct free_record{
   struct free_record * next;
-  struct free_record * zero;
+  uint32_t unused1;
+  uint32_t unused2;
+  uint32_t unused3;
 };
 
 /*structure for storing information about a block of virtual pages*/
 struct page_record{
-  uint32_t address_size; /*address 31-12, (log(size)-12) 7-3, flags 0-2*/
+  uint32_t flags; /*(log(size)-12) 7-3, flags 0-2*/
+  uint32_t address;
+  struct page_record * prev;
   struct page_record * next;
 };
 
 /* structure for storing page records in a tree */
 struct tree_record{
+  uint32_t flags; /*tree level 7-3 flags 0-2*/
+  struct tree_record * parent;
   struct tree_record * left;
   struct tree_record * right;
 };
 
 void add_to_tree(struct page_record *, struct tree_record *);
-/*struct page_record * get_from_tree(uint32_t, struct tree_record *);*/
+void free_from_tree(uint32_t, struct tree_record *, int);
 
 struct free_record * free_records = (struct free_record *) 0x00008000;
 struct page_record * free_pages_by_size[20];
@@ -62,34 +68,42 @@ void setup_virtual_page_allocator(){
   /*pop a record from the free records and record the allocatable space in the second 2MiB*/
   free_pages_by_size[9] = (struct page_record *) free_records;
   free_records = free_records->next;
-  free_pages_by_size[9]->address_size = 0x00200000 | (9 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
-  free_pages_by_size[9]->next = 0x00000000;
+  free_pages_by_size[9]-flags = (9 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
+  free_pages_by_size[9]->address_size = 0x00200000;
+  free_pages_by_size[9]->prev = 0;
+  free_pages_by_size[9]->next = 0;
 
   /*divide the rest of the memory into 4MiB chunks for allocation*/
   free_pages_by_size[10] = (struct page_record *) free_records;
   free_records = free_records->next;
-  current_page_record = free_pages_by_size[10]; 
+  current_page_record = free_pages_by_size[10];
+  current_page_record->prev = 0;
   for(address = (1 << 22); address < (uint32_t) (1022 << 22); address += (1 << 22)){
-    current_page_record->address_size = address | (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
+    current_page_record->flags = (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
+    current_page_record->address = address;
 
     next_page_record = (struct page_record *) free_records;
     free_records = free_records->next;
     current_page_record->next = next_page_record;
+    next_page_record->prev = current_page_record;
 
     current_page_record = next_page_record;
   }
-  current_page_record->address_size = address | (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
-  current_page_record->next = 0x00000000;
+  current_page_record->flags = (10 << 3) | FLAG_PAGE_RECORD | FLAG_USED_RECORD;
+  current_page_record->address = address;
+  current_page_record->next = 0;
   
   /*make root of tree by address*/
   pages_by_address = (struct tree_record *) free_records;
   free_records = free_records->next;
   current_tree_record = pages_by_address;
-  current_tree_record->left = (struct tree_record *) (0x00000000 | FLAG_USED_RECORD);
-  current_tree_record->right = (struct tree_record *) 0x00000000;
+  current_tree_record->flags = (31 << 3) | FLAG_USED_RECORD;
+  current_tree_record->parent = (struct tree_record *) 0;
+  current_tree_record->left = (struct tree_record *) 0;
+  current_tree_record->right = (struct tree_record *) 0;
 
   /*put the unallocated record list of size 10 into the tree by address*/
-  for(current_page_record = free_pages_by_size[10]; current_page_record != 0x00000000; current_page_record = current_page_record->next){
+  for(current_page_record = free_pages_by_size[10]; current_page_record != 0; current_page_record = current_page_record->next){
     add_to_tree(current_page_record, pages_by_address);
   }
 
@@ -108,20 +122,23 @@ void add_to_tree(struct page_record * page_block, struct tree_record * tree_root
     if(((address >> level) % 2) == 0){
       /* kprint("left "); */
       /*look at the left subtree*/
-      if(((uint32_t) RECORD_ADDRESS(current_tree_record->left)) == 0){
+      if((uint32_t) current_tree_record->left == 0){
 	/*make nonexistent left branch*/
 	if(free_records == 0){
 	  kprintln("ERROR: NO FREE RECORDS LEFT");
 	  halt();
 	}
-	current_tree_record->left = (struct tree_record *) ((uint32_t) free_records | FLAG_USED_RECORD);
+	current_tree_record->left = (struct tree_record *) free_records;
 	free_records = free_records->next;
-	current_tree_record = (struct tree_record *) RECORD_ADDRESS(current_tree_record->left);
+
+	current_tree_record->left->flags = ((level-1) << 3) | FLAG_USED_RECORD;
+	current_tree_record->left->parent = current_tree_record;
+	current_tree_record->left->left = (struct tree_record *) 0;
+	current_tree_record->left->right = (struct tree_record *) 0;
 	
-	current_tree_record->left = (struct tree_record *) (0x00000000 | FLAG_USED_RECORD);
-	current_tree_record->right = (struct tree_record *) 0x00000000;
+	current_tree_record = (struct tree_record *) current_tree_record->left;	
       }else{
-	current_tree_record = (struct tree_record *) RECORD_ADDRESS(current_tree_record->left);
+	current_tree_record = (struct tree_record *) current_tree_record->left;
       }
     }else{
       /* kprint("right "); */
@@ -134,10 +151,13 @@ void add_to_tree(struct page_record * page_block, struct tree_record * tree_root
 	}
 	current_tree_record->right = (struct tree_record *) free_records;
 	free_records = free_records->next;
+
+	current_tree_record->right->flags = ((level-1) << 3) | FLAG_USED_RECORD;
+	current_tree_record->right->parent = current_tree_record;
+	current_tree_record->right->left = (struct tree_record *) 0;
+	current_tree_record->right->right = (struct tree_record *) 0;
+
 	current_tree_record = current_tree_record->right;
-	
-	current_tree_record->left = (struct tree_record *) (0x00000000 | FLAG_USED_RECORD);
-	current_tree_record->right = (struct tree_record *) 0x00000000;
       }else{
 	current_tree_record = current_tree_record->right;
       }
@@ -145,7 +165,7 @@ void add_to_tree(struct page_record * page_block, struct tree_record * tree_root
   }
   
   if(((address >> level) % 2) == 0){
-    current_tree_record->left = (struct tree_record *) ((uint32_t) page_block | FLAG_USED_RECORD);
+    current_tree_record->left = (struct tree_record *) page_block;
   }else{
     current_tree_record->right = (struct tree_record *) page_block;
   }
@@ -184,9 +204,10 @@ void * allocate_virtual_pages(int number_of_pages){
     /*if there is, pop it from the list*/
     page_block = free_pages_by_size[shift_number];
     free_pages_by_size[shift_number] = free_pages_by_size[shift_number]->next;
+    free_pages_by_size[shift_number]->prev = 0;
 
     /*mark the page block as used*/
-    page_block->address_size = page_block->address_size | FLAG_USED_PAGES;
+    page_block->flags = page_block->flags | FLAG_USED_PAGES;
   }else{
     /*if there isn't a block of the correct size, search for a larger block that could be broken up*/
     for(larger_shift = shift_number+1; larger_shift < 20; larger_shift++){
@@ -197,6 +218,7 @@ void * allocate_virtual_pages(int number_of_pages){
     /*remove this block from the free block list*/
     page_block = free_pages_by_size[larger_shift];
     free_pages_by_size[larger_shift] = free_pages_by_size[larger_shift]->next;
+    free_pages_by_size[larger_shift]->prev = 0;
 
     /*break up the block and put the spare blocks in the tree*/
     for(i = larger_shift; i > shift_number; i--){
@@ -250,4 +272,37 @@ void * allocate_virtual_pages(int number_of_pages){
 
   /*return the address of the block*/
   return (void *) PAGE_ADDRESS(page_block->address_size);
+}
+
+void free_virtual_pages(void * address){
+  free_from_tree((uint32_t) address, pages_by_address, 31);
+}
+
+void free_from_tree(uint32_t address, struct tree_record * tree, int level){
+  struct page_record * pages = (struct page_record *) tree;
+  /*check if a page record has been found*/
+  if(tree->left & FLAG_PAGE_RECORD){
+    /*if it has, mark it as free*/
+    pages->address_size = pages->address_size & (!FLAG_USED_PAGES);
+
+    /*push it onto the correct stack*/
+    pages->next = free_pages_by_size[level-12];
+    free_pages_by_size[level-12] = pages;
+
+    return;
+  }
+
+  if(((address >> level) % 2) == 0){
+    /*check left subtree*/
+    free_from_tree(address, RECORD_ADDRESS(tree->left), level-1);
+  }else{
+    /*check right subtree*/
+    free_from_tree(address, tree->right, level-1);
+  }
+
+  /*try to combine the pages if there are two adjacent free pages*/
+  if((RECORD_ADDRESS(tree->left)->left & (FLAG_PAGE_RECORD | FLAG_USED_PAGES))
+     && ((tree->right)->left & (FLAG_PAGE_RECORD | FLAG_USED_PAGES))){
+    /**/
+  }
 }

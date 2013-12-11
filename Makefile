@@ -6,9 +6,9 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
             -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
             -Wredundant-decls -Wnested-externs -Winline -Wno-long-long \
             -Wuninitialized -Wconversion -Wstrict-prototypes 
-CFLAGS := -g -ffreestanding $(WARNINGS)
+CFLAGS := -g -ffreestanding $(WARNINGS) -std=c99
 
-OBJECTS := loader.o kernel.o output.o gdt.o idt.o interrupts.o interrupt_handlers.o physical_memory.o virtual_memory.o
+OBJECTS := loader.o kernel.o output.o gdt.o idt.o interrupts.o interrupt_handlers.o physical_memory.o asm_functions.o
 
 DISK := floppy.img
 LOOP := /dev/loop0
@@ -27,6 +27,9 @@ loader.o: loader.s
 	@$(AS) -o $@ $<
 
 interrupts.o: interrupts.s
+	@$(AS) -o $@ $<
+
+asm_functions.o: asm_functions.s
 	@$(AS) -o $@ $<
 
 %.o: %.c

@@ -28,41 +28,7 @@ loader:
     movl  $(stack + STACKSIZE), %esp    # set up the stack
     movl  %eax, magic                   # Multiboot magic number
     movl  %ebx, mbd                     # Multiboot data structure
-	
-    call make_gdt
-    movw gdt_size, %ax
-    movw %ax, gdtr
-    movl gdt, %eax
-    movl %eax, gdtr+2
-    lgdt gdtr
-    movw $0x10, %ax
-    movw %ax, %ds
-    movw %ax, %ss
-    movw %ax, %es
-    movw %ax, %fs
-    ljmp $0x08, $gdt_jump
-gdt_jump:
-    movw $0x18, %ax
-    ltr  %ax
-
-    call make_idt
-    movw idt_size, %ax
-    movw %ax, idtr
-    movl idt, %eax
-    movl %eax, idtr+2
-    lidt idtr
-
-    call index_pages
-	
-    call make_page_directory
-    movl $page_directory, %eax
-    movl %eax, %cr3
-    movl %cr0, %eax
-    orl  $0x80000000, %eax
-    movl %eax, %cr0
-
-    call setup_virtual_page_allocator
-
+        
     call kmain                         # call kernel proper
 
     cli

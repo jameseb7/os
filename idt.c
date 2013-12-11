@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include "kernel.h"
+#include "asm_functions.h"
+#include "idt.h"
 
 struct IDT_entry{
    uint16_t offset_low;
@@ -9,8 +11,7 @@ struct IDT_entry{
    uint16_t offset_high;
 };
 
-struct IDT_entry * idt = (struct IDT_entry *) 0x00000700;
-uint16_t idt_size;
+struct IDT_entry idt[256];
 
 extern void interrupt_entry(void);
 extern void interrupt0x0(void);
@@ -23,9 +24,27 @@ extern void interrupt0xD(void);
 uint8_t inb(uint16_t);
 void outb(uint16_t, uint8_t);
 
-void make_idt(){
-   int i;
-   uint8_t tmp1, tmp2;
+void add_interrupt_handler(uint8_t interrupt, uint32_t handler_address){
+  idt[interrupt].offset_low      = (uint16_t) (handler_address & 0xFFFF);
+  idt[interrupt].selector        = 0x0008;
+  idt[interrupt].zero            = 0x00;
+  idt[interrupt].type_attributes = 0x8E;
+  idt[interrupt].offset_high     = (uint16_t) (handler_address >> 16);
+}
+
+void setup_idt(){
+  add_interrupt_handler(0x00, (uint32_t) interrupt0x0);
+  add_interrupt_handler(0x08, (uint32_t) interrupt0x8);
+  add_interrupt_handler(0x0A, (uint32_t) interrupt0xA);
+  add_interrupt_handler(0x0B, (uint32_t) interrupt0xB);
+  add_interrupt_handler(0x0C, (uint32_t) interrupt0xC);
+  add_interrupt_handler(0x0D, (uint32_t) interrupt0xD);
+
+  load_idt((uint32_t) &idt, sizeof(idt));
+}
+
+void remap_interrupts(){
+  uint8_t tmp1, tmp2;
 
    /*store the PIC masks from the data ports*/
    tmp1 = inb(0x21);
@@ -54,77 +73,7 @@ void make_idt(){
 
    /*restore the PIC masks*/
    outb(0x21, tmp1);
-   outb(0xA1, tmp2);
-	   
-
-   for(i = 0; i < 256; i++){
-      switch(i){
-      case 0x0:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt0x0) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt0x0) >> 16);
-	break;
-
-      case 0x8:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt0x8) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt0x8) >> 16);
-	break;
-
-      case 0xA:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt0xA) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt0xA) >> 16);
-	break;
-
-      case 0xB:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt0xB) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt0xB) >> 16);
-	break;
-
-      case 0xC:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt0xC) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt0xC) >> 16);
-	break;
-
-      case 0xD:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt0xD) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt0xD) >> 16);
-	break;
-
-      case 0x80:
-	idt[i].offset_low      = (uint16_t) ((uint32_t) &interrupt_entry) & 0xFFFF;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x8E;
-	idt[i].offset_high     = (uint16_t) (((uint32_t) &interrupt_entry) >> 16);
-	break;
-
-      default:
-	idt[i].offset_low      = 0x0000;
-	idt[i].selector        = 0x0008;
-	idt[i].zero            = 0x00;
-	idt[i].type_attributes = 0x0E;
-	idt[i].offset_high     = 0x0000;
-      }
-   }
-   
-   idt_size = 256 * sizeof(struct IDT_entry);
+   outb(0xA1, tmp2);	   
 }
 
 uint8_t inb(uint16_t port){

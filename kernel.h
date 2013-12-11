@@ -16,15 +16,16 @@ char * uint32_to_hex_string(uint32_t input);
 char * uint64_to_hex_string(uint64_t input);
 
 /*memory setup functions*/
-void make_gdt(void);
-void make_idt(void);
+/*void make_gdt(void);
+void make_idt(void);*/
 void index_pages(void);
-void make_page_directory(void);
+uint8_t * make_page_directory(void);
 void setup_virtual_page_allocator(void);
 
 /*memory allocation functions*/
 void allocate_physical_page(uint32_t);
 void free_physical_page(uint32_t);
 void * allocate_virtual_pages(int);
+void free_virtual_pages(void *);
 
 #endif /*KERNEL_H*/

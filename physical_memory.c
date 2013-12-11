@@ -119,7 +119,7 @@ void free_physical_page(uint32_t virtual_page_address){
   page_table[page_table_index] = 0x00000000;
 }
 
-void make_page_directory(){
+uint8_t * make_page_directory(){
    int i;
 
    page_directory[0] = ((uint32_t) &first_page_table) | PDE_PRESENT | PDE_WRITEABLE;
@@ -129,6 +129,8 @@ void make_page_directory(){
    /*set up identity paging for the first two megabytes*/
    for(i = 0; i < 512; i++) first_page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
    for(; i < 1024; i++) first_page_table[i] = 0x00000000;
+
+   return (uint8_t *) page_directory;
 }
 
  
