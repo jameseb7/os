@@ -26,6 +26,8 @@ uint32_t * page_stack = (uint32_t *) 0x00000000;
 extern uint32_t magic;
 extern multiboot_data * mbd;
 
+extern uint32_t OS_end;
+
 void index_pages(){
   mmap * m = (mmap*) (mbd->mmap_addr);
   mmap * mmap_end = (mmap*) ((mbd->mmap_addr) + (mbd->mmap_length));
@@ -46,16 +48,16 @@ void index_pages(){
     /*skip unusable blocks*/
     if(m->type != 1) continue;
     
-    /*skip blocks entirely below 2 MiB*/
-    if((m->base_addr + m->length) < (2 << 20)) continue;
+    /*skip blocks that are below the end of the OS*/
+    if((m->base_addr + m->length) < (uint32_t) &OS_end) continue;
 
     /*skip blocks above 4 GiB (32-bit addressable memory)*/
     if(m->base_addr > ((uint64_t) 1 << 32)) continue;
 
     /*if a block begins below 2 MiB, consider only the part above 2 MiB,
      otherwise start indexing at the next page boundary after base_addr*/
-    if(m->base_addr < (2 << 10)){
-      page = (uint32_t *) (2 << 20);
+    if(m->base_addr < (uint32_t) &OS_end){
+      page = (uint32_t *) &OS_end;
     }else{
       if((m->base_addr & 0x00000FFF) == 0){
 	page = (uint32_t *) ((uint32_t) m->base_addr & 0xFFFFFFFF);
@@ -120,14 +122,14 @@ void free_physical_page(uint32_t virtual_page_address){
 }
 
 uint8_t * make_page_directory(){
-   int i;
+   uint32_t i;
 
    page_directory[0] = ((uint32_t) &first_page_table) | PDE_PRESENT | PDE_WRITEABLE;
    for(i = 1; i < 1023; i++) page_directory[i] = 0x00000000;
    page_directory[1023] = ((uint32_t) &page_directory) | PDE_PRESENT | PDE_WRITEABLE;
 
-   /*set up identity paging for the first two megabytes*/
-   for(i = 0; i < 512; i++) first_page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
+   /*set up identity paging up to the end of the OS*/
+   for(i = 0; i*(1 << 12) < (uint32_t) &OS_end; i++) first_page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
    for(; i < 1024; i++) first_page_table[i] = 0x00000000;
 
    return (uint8_t *) page_directory;

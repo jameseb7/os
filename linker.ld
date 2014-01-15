@@ -26,4 +26,6 @@ SECTIONS
         *(.bss)
         ebss = .;
     }
+
+    OS_end = .;
 }

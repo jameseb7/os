@@ -11,7 +11,6 @@ void interrupt_handler(void);
 
 void kmain(){
   uint8_t * page_directory;
-  int temp = 0;
     /*extern void *mbd;*/
 
   kprintln("KERNEL STARTED");
@@ -35,30 +34,7 @@ void kmain(){
   
   clear_screen();
 
-  /*ptr = allocate_virtual_pages(1);
-
-  kprintln(uint32_to_hex_string((uint32_t) ptr));
-  ptr[0] = 'A';
-  ptr[1] = 'B';
-  ptr[2] = 'C';
-  ptr[3] = '\0';
-  kprintln(ptr);
-
-  ptr = allocate_virtual_pages(8);
-  kprintln(uint32_to_hex_string((uint32_t) ptr));
-  ptr[4096*8 - 3] = 'D';
-  ptr[4096*8 - 2] = 'E';
-  ptr[4096*8 - 1] = '\0';
-  kprintln(ptr + 4096*8 - 3);
-
-  ptr = allocate_virtual_pages(6);
-  kprintln(uint32_to_hex_string((uint32_t) ptr));
-  ptr[4096*8 - 3] = 'F';
-  ptr[4096*8 - 2] = 'G';
-  ptr[4096*8 - 1] = '\0';
-  kprintln(ptr + 4096*8 - 3);*/
-
-  temp = 1/temp;
+  kprintln("TEST");
 }
 
 void halt(){
