@@ -8,7 +8,9 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
             -Wuninitialized -Wconversion -Wstrict-prototypes 
 CFLAGS := -g -ffreestanding $(WARNINGS) -std=c99
 
-OBJECTS := loader.o kernel.o output.o gdt.o idt.o interrupts.o interrupt_handlers.o physical_memory.o asm_functions.o
+OBJECTS := loader.o kernel.o output.o \
+	   gdt.o idt.o interrupts.o interrupt_handlers.o \
+           physical_memory.o virtual_memory.o asm_functions.o
 
 DISK := floppy.img
 LOOP := /dev/loop0

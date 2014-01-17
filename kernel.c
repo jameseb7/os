@@ -11,8 +11,10 @@ void interrupt_handler(void);
 
 void kmain(){
   uint8_t * page_directory;
-    /*extern void *mbd;*/
+  /*extern void *mbd;*/
+  uint32_t * ptr;
 
+  clear_screen();
   kprintln("KERNEL STARTED");
     
   if(magic != 0x2BADB002){
@@ -30,11 +32,32 @@ void kmain(){
   index_pages();
   page_directory = make_page_directory();
   load_page_directory(page_directory);
+  init_virtual_page_allocator();
   enable_paging();
   
   clear_screen();
 
   kprintln("TEST");
+
+  ptr = allocate_virtual_pages_high(0x1000);
+  kprint("allocated (1): ");
+  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  *ptr = 3;
+  kprintln(uint32_to_hex_string(*ptr));
+
+  ptr = allocate_virtual_pages_high(0x4000);
+  kprint("allocated (2): ");
+  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  ptr += 0x3FF0 >> 2;
+  *ptr = 10;
+  kprintln(uint32_to_hex_string(*ptr));
+
+  ptr = allocate_virtual_pages_low(0x4000);
+  kprint("allocated (3): ");
+  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  ptr += 0x3FF0 >> 2;
+  *ptr = 14;
+  kprintln(uint32_to_hex_string(*ptr));
 }
 
 void halt(){

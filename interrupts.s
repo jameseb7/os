@@ -30,15 +30,15 @@ interrupt0xB:
 	mov %cr2, %eax
 	iret
 
-	.global interrupt0xC
-interrupt0xC:
+	.global interrupt0xD
+interrupt0xD:
 	pusha
 	call general_protection_fault_handler
 	popa
 	iret
 
-	.global interrupt0xD
-interrupt0xD:	
+	.global interrupt0xE
+interrupt0xE:	
 	pusha
 	call page_fault_handler
 	popa

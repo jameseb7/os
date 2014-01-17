@@ -58,6 +58,10 @@ void index_pages(){
      otherwise start indexing at the next page boundary after base_addr*/
     if(m->base_addr < (uint32_t) &OS_end){
       page = (uint32_t *) &OS_end;
+      if(((uint32_t) page & 0xFFF) != 0){
+        page = (uint32_t *) ((uint32_t) page & 0xFFFFF000);
+        page += 1 << 12;
+      }
     }else{
       if((m->base_addr & 0x00000FFF) == 0){
 	page = (uint32_t *) ((uint32_t) m->base_addr & 0xFFFFFFFF);
@@ -65,7 +69,7 @@ void index_pages(){
 	page = (uint32_t *) (((uint32_t)  m->base_addr & 0xFFFFF000) + (1 << 12));
       }
     }
-
+   
     /*push each page of the memory block onto the page stack*/
     for(; ((uint32_t) page < (m->base_addr + m->length)) && (page != 0) /*avoid 32-bit wraparound*/; page += (1 << 12)){
       *page = (uint32_t) page_stack;
@@ -84,6 +88,7 @@ void allocate_physical_page(uint32_t virtual_page_address){
   if(page_stack == 0){
     /*TODO: add code to handle having no pages left*/
     kprintln("ERROR: PAGE STACK EMPTY");
+    halt();
     return;
   }
 
@@ -96,9 +101,9 @@ void allocate_physical_page(uint32_t virtual_page_address){
       page_table[i] = 0x00000000;
     }
   }
-  
+
   page_table[page_table_index] = ((uint32_t) page_stack) | PTE_PRESENT | PTE_WRITEABLE;
-  page_stack = (uint32_t *) *((uint32_t *) (virtual_page_address & 0xFFFFF000)) ;  
+  page_stack = (uint32_t *) *((uint32_t *) (virtual_page_address & 0xFFFFF000));  
 }
 
 void free_physical_page(uint32_t virtual_page_address){

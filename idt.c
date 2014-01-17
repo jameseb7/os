@@ -18,8 +18,8 @@ extern void interrupt0x0(void);
 extern void interrupt0x8(void);
 extern void interrupt0xA(void);
 extern void interrupt0xB(void);
-extern void interrupt0xC(void);
 extern void interrupt0xD(void);
+extern void interrupt0xE(void);
 
 uint8_t inb(uint16_t);
 void outb(uint16_t, uint8_t);
@@ -37,8 +37,8 @@ void setup_idt(){
   add_interrupt_handler(0x08, (uint32_t) interrupt0x8);
   add_interrupt_handler(0x0A, (uint32_t) interrupt0xA);
   add_interrupt_handler(0x0B, (uint32_t) interrupt0xB);
-  add_interrupt_handler(0x0C, (uint32_t) interrupt0xC);
   add_interrupt_handler(0x0D, (uint32_t) interrupt0xD);
+  add_interrupt_handler(0x0E, (uint32_t) interrupt0xE);
 
   load_idt((uint32_t) &idt, sizeof(idt));
 }

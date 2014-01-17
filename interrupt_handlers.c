@@ -35,6 +35,16 @@ void general_protection_fault_handler(){
 }
 
 void page_fault_handler(){
+  uint32_t error_code, address;
+
+  __asm__("movl %%cr2, %0" : "=r"(address));
+  __asm__("pop %0" : "=r"(error_code));
+
   kprintln("ERROR: Page fault");
+  kprint("error code: ");
+  kprintln(uint32_to_hex_string(error_code));
+  kprint("address: ");
+  kprintln(uint32_to_hex_string(address));
+
   halt();
 }
