@@ -35,7 +35,7 @@ void index_pages(){
 
   if(magic != 0x2BADB002){
     kprint("ERROR: Invalid multiboot magic number: ");
-    kprintln(uint32_to_hex_string(magic));
+    kprintln_uint32(magic);
     return;
   }
   if((mbd->flags & (1 << 6)) == 0){

@@ -22,7 +22,7 @@ void kmain(){
     /* message and halt, but do *not* rely on the multiboot */
     /* data structure. */
     kprint("ERROR: Invalid multiboot magic number: ");
-    kprintln(uint32_to_hex_string(magic));
+    kprintln_uint32(magic);
     return;
   }
 
@@ -41,23 +41,23 @@ void kmain(){
 
   ptr = allocate_virtual_pages_high(0x1000);
   kprint("allocated (1): ");
-  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  kprintln_uint32((uint32_t) ptr);
   *ptr = 3;
-  kprintln(uint32_to_hex_string(*ptr));
+  kprintln_uint32(*ptr);
 
   ptr = allocate_virtual_pages_high(0x4000);
   kprint("allocated (2): ");
-  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  kprintln_uint32((uint32_t) ptr);
   ptr += 0x3FF0 >> 2;
   *ptr = 10;
-  kprintln(uint32_to_hex_string(*ptr));
+  kprintln_uint32(*ptr);
 
   ptr = allocate_virtual_pages_low(0x4000);
   kprint("allocated (3): ");
-  kprintln(uint32_to_hex_string((uint32_t) ptr));
+  kprintln_uint32((uint32_t) ptr);
   ptr += 0x3FF0 >> 2;
   *ptr = 14;
-  kprintln(uint32_to_hex_string(*ptr));
+  kprintln_uint32(*ptr);
 }
 
 void halt(){

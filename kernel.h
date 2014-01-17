@@ -12,8 +12,10 @@ unsigned int write_screen(const char * str,
 void clear_screen(void);
 void kprint(const char * str);
 void kprintln(const char * str);
-char * uint32_to_hex_string(uint32_t input);
-char * uint64_to_hex_string(uint64_t input);
+void kprint_uint32(uint32_t input);
+void kprintln_uint32(uint32_t input);
+void kprint_uint64(uint64_t input);
+void kprintln_uint64(uint64_t input);
 
 /*memory setup functions*/
 /*void make_gdt(void);

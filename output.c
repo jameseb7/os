@@ -133,3 +133,17 @@ char * uint64_to_hex_string(uint64_t input){
 
    return output;
 }
+
+void kprint_uint32(uint32_t input) {
+  kprint(uint32_to_hex_string(input));
+}
+void kprintln_uint32(uint32_t input) {
+  kprintln(uint32_to_hex_string(input));
+}
+
+void kprint_uint64(uint64_t input) {
+  kprint(uint64_to_hex_string(input));
+}
+void kprintln_uint64(uint64_t input) {
+  kprintln(uint64_to_hex_string(input));
+}

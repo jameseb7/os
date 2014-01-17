@@ -25,7 +25,7 @@ void invalid_tss_handler(){
 
 void segment_not_present_handler(uint16_t selector){
   kprint("ERROR: Segment not present:");
-  kprintln(uint32_to_hex_string((uint32_t) selector));
+  kprintln_uint32((uint32_t) selector);
   halt();
 }
 
@@ -42,9 +42,9 @@ void page_fault_handler(){
 
   kprintln("ERROR: Page fault");
   kprint("error code: ");
-  kprintln(uint32_to_hex_string(error_code));
+  kprintln_uint32(error_code);
   kprint("address: ");
-  kprintln(uint32_to_hex_string(address));
+  kprintln_uint32(address);
 
   halt();
 }
