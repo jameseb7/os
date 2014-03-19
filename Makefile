@@ -8,34 +8,34 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
             -Wuninitialized -Wconversion -Wstrict-prototypes 
 CFLAGS := -g -ffreestanding $(WARNINGS) -std=c99
 
-OBJECTS := loader.o kernel.o output.o \
-	   gdt.o idt.o interrupts.o interrupt_handlers.o \
-           physical_memory.o virtual_memory.o asm_functions.o
+#based on 'Recursive Make Considered Harmful'
+MODULES := interrupts kernel koutput memory
+CFLAGS += $(patsubst %, -I%, $(MODULES))
+SRC := 
+include $(patsubst %,%/module.mk,$(MODULES))
+OBJ := 	$(patsubst %.c,%.o,$(filter %.c,$(SRC))) \
+	$(patsubst %.s,%.o,$(filter %.s,$(SRC)))
 
 DISK := floppy.img
 LOOP := /dev/loop0
 MNT  := /mnt/floppy
 
-
-
 .PHONY: all install
 
 all: kernel.bin
 
-kernel.bin: linker.ld $(OBJECTS)
-	@$(LD) -T linker.ld -o $@ $(OBJECTS)
+kernel.bin: linker.ld $(OBJ)
+	$(LD) -T linker.ld -o $@ $(OBJ)
 
-loader.o: loader.s
-	@$(AS) -o $@ $<
-
-interrupts.o: interrupts.s
-	@$(AS) -o $@ $<
-
-asm_functions.o: asm_functions.s
-	@$(AS) -o $@ $<
+%.d: %.c
+	$(CC) -MM -MF $@ $<
+include $(OBJ:.o=.d)
 
 %.o: %.c
-	@$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%.o: %.s
+	$(AS) -o $@ $<
 
 install:
 	@losetup $(LOOP) $(DISK); \

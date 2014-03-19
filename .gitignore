@@ -1,13 +1,8 @@
-#start by ignoring everything
-*
-!.gitignore
+*.o
 
-#track C files
-!*.h
-!*.c
+*.bin
+*.img
 
-#track assembly files
-!*.s
+*~
 
-#track Makefile
-!Makefile
+bochsrc
