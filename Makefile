@@ -6,7 +6,7 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
             -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
             -Wredundant-decls -Wnested-externs -Winline -Wno-long-long \
             -Wuninitialized -Wconversion -Wstrict-prototypes 
-CFLAGS := -g -ffreestanding $(WARNINGS) -std=c99
+CFLAGS := -g -I include -ffreestanding $(WARNINGS) -std=c99
 
 #based on 'Recursive Make Considered Harmful'
 MODULES := interrupts kernel koutput memory
@@ -28,8 +28,9 @@ kernel.bin: linker.ld $(OBJ)
 	$(LD) -T linker.ld -o $@ $(OBJ)
 
 %.d: %.c
-	$(CC) -MM -MF $@ $<
-include $(OBJ:.o=.d)
+	$(CC) -I include -MM -MF $@ $<
+
+include $(patsubst %.c,%.d,$(filter %.c,$(SRC)))
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
