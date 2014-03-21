@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "multiboot.h"
 #include "kernel.h"
+#include "memory.h"
 
 #define PDE_PRESENT       1 << 0
 #define PDE_WRITEABLE     1 << 1
@@ -23,22 +24,22 @@ uint32_t page_directory[1024] __attribute__ ((aligned(4096)));
 uint32_t first_page_table[1024] __attribute__ ((aligned(4096)));
 uint32_t * page_stack = (uint32_t *) 0x00000000;
 
-extern uint32_t magic;
-extern multiboot_data * mbd;
+extern uint32_t mb_magic;
+extern multiboot_data * mb_data;
 
 extern uint32_t OS_end;
 
 void index_pages(){
-  mmap * m = (mmap*) (mbd->mmap_addr);
-  mmap * mmap_end = (mmap*) ((mbd->mmap_addr) + (mbd->mmap_length));
+  mmap * m = (mmap*) (mb_data->mmap_addr);
+  mmap * mmap_end = (mmap*) ((mb_data->mmap_addr) + (mb_data->mmap_length));
   uint32_t * page = (uint32_t *) 0x00000000;
 
-  if(magic != 0x2BADB002){
+  if(mb_magic != 0x2BADB002){
     kprint("ERROR: Invalid multiboot magic number: ");
-    kprintln_uint32(magic);
+    kprintln_uint32(mb_magic);
     return;
   }
-  if((mbd->flags & (1 << 6)) == 0){
+  if((mb_data->flags & (1 << 6)) == 0){
     kprintln("ERROR: Memory map not present");
     return;
   }

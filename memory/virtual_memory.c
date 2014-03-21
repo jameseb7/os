@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "memory.h"
 #include "kernel.h"
 
 extern uint32_t OS_end;

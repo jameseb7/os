@@ -1,28 +1,27 @@
 #include <stdint.h>
 #include "kernel.h"
-#include "gdt.h"
+#include "memory.h"
 #include "idt.h"
 #include "asm_functions.h"
 
-extern uint32_t magic;
+extern uint32_t mb_magic;
 
 void kmain(void);
 void interrupt_handler(void);
 
 void kmain(){
   uint8_t * page_directory;
-  /*extern void *mbd;*/
   uint32_t * ptr;
 
   clear_screen();
   kprintln("KERNEL STARTED");
     
-  if(magic != 0x2BADB002){
+  if(mb_magic != 0x2BADB002){
     /* Something went not according to specs. Print an error */
     /* message and halt, but do *not* rely on the multiboot */
     /* data structure. */
     kprint("ERROR: Invalid multiboot magic number: ");
-    kprintln_uint32(magic);
+    kprintln_uint32(mb_magic);
     return;
   }
 
