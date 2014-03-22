@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "koutput.h"
 #include "kernel.h"
 
 void divide_by_zero_handler(void);

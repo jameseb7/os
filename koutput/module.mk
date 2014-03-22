@@ -1,1 +1,1 @@
-SRC += koutput/output.c
+SRC += koutput/koutput.c

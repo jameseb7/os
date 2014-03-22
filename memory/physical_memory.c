@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "multiboot.h"
+#include "koutput.h"
 #include "kernel.h"
 #include "memory.h"
 

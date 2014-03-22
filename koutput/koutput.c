@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "kernel.h"
+#include "koutput.h"
 
 static volatile char * videoram = (char *) 0xB8000;
 static unsigned int current_row = 0;
@@ -8,6 +8,9 @@ static unsigned int current_col = 0;
 char parse_nybble(uint8_t);
 char * uint32_to_hex_string(uint32_t input);
 char * uint64_to_hex_string(uint64_t input);
+unsigned int write_screen(const char * str,
+                          char foreclr, char backclr,
+                          unsigned int x, unsigned int y);
 
 unsigned int write_screen(const char * str,
 			  char foreclr, char backclr,

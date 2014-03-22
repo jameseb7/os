@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "kernel.h"
 #include "memory.h"
+#include "koutput.h"
 #include "idt.h"
 #include "asm_functions.h"
 
