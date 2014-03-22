@@ -1,3 +1,3 @@
-SRC += interrupts/idt.c 
+SRC += interrupts/interrupts.c 
 SRC += interrupts/interrupt_handlers.c
-SRC += interrupts/interrupts.s
+SRC += interrupts/interrupt_entries.s

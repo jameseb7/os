@@ -2,7 +2,7 @@
 #include "kernel.h"
 #include "memory.h"
 #include "koutput.h"
-#include "idt.h"
+#include "interrupts.h"
 #include "asm_functions.h"
 
 extern uint32_t mb_magic;
@@ -27,7 +27,9 @@ void kmain(){
   }
 
   setup_gdt();
-  setup_idt();
+
+  interrupts_init();
+  add_interrupt_handler(0x80, (uint32_t) interrupt_handler);
 
   index_pages();
   page_directory = make_page_directory();
@@ -38,6 +40,7 @@ void kmain(){
   clear_screen();
 
   kprintln("TEST");
+  __asm__("int $0x80");
 
   ptr = allocate_virtual_pages_high(0x1000);
   kprint("allocated (1): ");

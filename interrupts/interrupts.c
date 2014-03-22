@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include "kernel.h"
-#include "asm_functions.h"
-#include "idt.h"
+#include "interrupts.h"
 
 struct IDT_entry{
    uint16_t offset_low;
@@ -13,7 +12,6 @@ struct IDT_entry{
 
 struct IDT_entry idt[256];
 
-extern void interrupt_entry(void);
 extern void interrupt0x0(void);
 extern void interrupt0x8(void);
 extern void interrupt0xA(void);
@@ -21,6 +19,7 @@ extern void interrupt0xB(void);
 extern void interrupt0xD(void);
 extern void interrupt0xE(void);
 
+void remap_interrupts(void);
 uint8_t inb(uint16_t);
 void outb(uint16_t, uint8_t);
 
@@ -32,7 +31,8 @@ void add_interrupt_handler(uint8_t interrupt, uint32_t handler_address){
   idt[interrupt].offset_high     = (uint16_t) (handler_address >> 16);
 }
 
-void setup_idt(){
+void interrupts_init(){
+  remap_interrupts();
   add_interrupt_handler(0x00, (uint32_t) interrupt0x0);
   add_interrupt_handler(0x08, (uint32_t) interrupt0x8);
   add_interrupt_handler(0x0A, (uint32_t) interrupt0xA);
@@ -40,7 +40,15 @@ void setup_idt(){
   add_interrupt_handler(0x0D, (uint32_t) interrupt0xD);
   add_interrupt_handler(0x0E, (uint32_t) interrupt0xE);
 
-  load_idt((uint32_t) &idt, sizeof(idt));
+  __asm__(".lcomm  idtr, 6 \n\t"
+          "movw %1, idtr   \n\t"
+          "movl %0, idtr+2 \n\t"
+          "lidt idtr"
+          : /*outputs*/
+          : "r"(&idt), "r"((uint16_t) sizeof(idt)) /*inputs*/
+          : "%eax" /*clobbered registers*/);
+
+  __asm__("sti");
 }
 
 void remap_interrupts(){
