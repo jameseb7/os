@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include "memory.h"
-#include "asm_functions.h"
 
 extern uint32_t kernel_stack;
 
@@ -99,6 +98,9 @@ struct GDT_entry gdt[] = {
     .flags_limit_high = ((sizeof(struct TSS) >> 16) & 0x0F) | 0x40
   }
 };
+
+void load_gdt(uint32_t gdt, uint16_t gdt_size);
+void setup_gdt(void);
 
 void setup_gdt(){
   tss.esp0 = kernel_stack;

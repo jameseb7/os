@@ -6,6 +6,8 @@ extern uint32_t OS_end;
 static uint32_t low_pages_end;
 static uint32_t high_pages_start;
 
+void init_virtual_page_allocator(void);
+
 void init_virtual_page_allocator(){
   low_pages_end = (uint32_t) &OS_end;
   if((low_pages_end & 0xFFF) != 0){

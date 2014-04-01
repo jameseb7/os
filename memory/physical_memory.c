@@ -21,14 +21,15 @@
 #define PTE_DIRTY         1 << 6
 #define PTE_GLOBAL        1 << 8
 
-uint32_t page_directory[1024] __attribute__ ((aligned(4096)));
-uint32_t first_page_table[1024] __attribute__ ((aligned(4096)));
 uint32_t * page_stack = (uint32_t *) 0x00000000;
 
 extern uint32_t mb_magic;
 extern multiboot_data * mb_data;
 
 extern uint32_t OS_end;
+
+uint8_t * make_page_directory_nopaging(void);
+void index_pages(void);
 
 void index_pages(){
   mmap * m = (mmap*) (mb_data->mmap_addr);
@@ -81,6 +82,7 @@ void index_pages(){
 }
 
 void allocate_physical_page(uint32_t virtual_page_address){
+  uint32_t * page_directory = (uint32_t *) (((uint32_t) 1023 << 22) | ((uint32_t) 1023 << 12));
   uint32_t page_directory_index = (virtual_page_address & 0xFFC00000) >> 22;
   uint32_t page_table_index = (virtual_page_address & 0x003FF000) >> 12;
   uint32_t * page_table = (uint32_t *) (((uint32_t) 1023 << 22) | (page_directory_index << 12));
@@ -109,6 +111,7 @@ void allocate_physical_page(uint32_t virtual_page_address){
 }
 
 void free_physical_page(uint32_t virtual_page_address){
+  uint32_t * page_directory = (uint32_t *) (((uint32_t) 1023 << 22) | ((uint32_t) 1023 << 12));
   uint32_t page_directory_index = (virtual_page_address & 0xFFC00000) >> 22;
   uint32_t page_table_index = (virtual_page_address & 0x003FF000) >> 12;
   uint32_t * page_table = (uint32_t *) (((uint32_t) 1023 << 22) | (page_directory_index << 12));
@@ -128,22 +131,41 @@ void free_physical_page(uint32_t virtual_page_address){
   page_table[page_table_index] = 0x00000000;
 }
 
-uint8_t * make_page_directory(){
-   uint32_t i;
+uint32_t * page_stack_pop(void);
 
-   page_directory[0] = ((uint32_t) &first_page_table) | PDE_PRESENT | PDE_WRITEABLE;
-   for(i = 1; i < 1023; i++) page_directory[i] = 0x00000000;
-   page_directory[1023] = ((uint32_t) &page_directory) | PDE_PRESENT | PDE_WRITEABLE;
+uint8_t * make_page_directory_nopaging(){
+  uint32_t * page_directory = page_stack_pop();
+  uint32_t * page_table = page_stack_pop();
+  uint32_t i;
 
-   /*set up identity paging up to the end of the OS*/
-   for(i = 0; i*(1 << 12) < (uint32_t) &OS_end; i++) first_page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
-   for(; i < 1024; i++) first_page_table[i] = 0x00000000;
-
-   return (uint8_t *) page_directory;
+  page_directory[0] = ((uint32_t) &page_table) | PDE_PRESENT | PDE_WRITEABLE;
+  for(i = 1; i < 1023; i++) page_directory[i] = 0x00000000;
+  page_directory[1023] = ((uint32_t) &page_directory) | PDE_PRESENT | PDE_WRITEABLE;
+  
+  /*set up identity paging up to the end of the OS*/
+  for(i = 0; i*(1 << 12) < (uint32_t) &OS_end; i++) page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
+  for(; i < 1024; i++) page_table[i] = 0x00000000;
+   
+  return (uint8_t *) page_directory;
 }
 
- 
+uint32_t * page_stack_pop(){
+  uint32_t * page;
+  
+  /*check there are pages in the page stack*/
+  if(page_stack == 0){
+    /*TODO: add code to handle having no pages left*/
+    kprintln("ERROR: PAGE STACK EMPTY");
+    halt();
+    return (uint32_t *) 0;
+  }
+  
+  page = page_stack;
+  page_stack = (uint32_t *) *page_stack;
 
+  return page;
+}
+ 
 
 
 

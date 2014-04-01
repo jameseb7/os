@@ -3,7 +3,6 @@
 #include "memory.h"
 #include "koutput.h"
 #include "interrupts.h"
-#include "asm_functions.h"
 
 extern uint32_t mb_magic;
 
@@ -11,7 +10,6 @@ void kmain(void);
 void interrupt_handler(void);
 
 void kmain(){
-  uint8_t * page_directory;
   uint32_t * ptr;
 
   clear_screen();
@@ -26,16 +24,10 @@ void kmain(){
     return;
   }
 
-  setup_gdt();
+  memory_init();
 
   interrupts_init();
   add_interrupt_handler(0x80, (uint32_t) interrupt_handler);
-
-  index_pages();
-  page_directory = make_page_directory();
-  load_page_directory(page_directory);
-  init_virtual_page_allocator();
-  enable_paging();
   
   clear_screen();
 

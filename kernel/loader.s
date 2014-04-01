@@ -17,9 +17,11 @@
 # reserve initial kernel stack space
 .set STACKSIZE, 0x4000                          # that is, 16k.
 .comm kernel_stack, STACKSIZE                   # reserve 16k stack on a doubleword boundary
-.comm mb_data, 4                                # we will use this in kmain
-.comm mb_magic, 4                               # we will use this in kmain
+.comm mb_data, 4                                # space to store pointer to Multiboot data structure
+.comm mb_magic, 4                               # space to store pointer to Multiboot magic number
 
+.set  kernel_stack_start, $kernel_stack + STACKSIZE
+        
 loader:
     cli	
     movl  $(kernel_stack + STACKSIZE), %esp     # set up the stack

@@ -6,7 +6,7 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
             -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
             -Wredundant-decls -Wnested-externs -Winline -Wno-long-long \
             -Wuninitialized -Wconversion -Wstrict-prototypes 
-CFLAGS := -g -ffreestanding $(WARNINGS) -std=c99
+CFLAGS := -ggdb -ffreestanding $(WARNINGS) -std=c99
 
 #based on 'Recursive Make Considered Harmful'
 MODULES := interrupts kernel koutput memory
@@ -36,7 +36,7 @@ include $(patsubst %.c,%.d,$(filter %.c,$(SRC)))
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 %.o: %.s
-	$(AS) -o $@ $<
+	$(AS) -ggdb -o $@ $<
 
 install:
 	@losetup $(LOOP) $(DISK); \
