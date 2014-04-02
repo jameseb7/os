@@ -6,7 +6,7 @@
 void setup_gdt(void);
 void index_pages(void);
 void init_virtual_page_allocator(void);
-uint8_t * make_page_directory_nopaging(void);
+uint32_t * make_page_directory_nopaging(void);
 void enable_paging(void);
 
 void memory_init(){
@@ -16,5 +16,5 @@ void memory_init(){
   init_virtual_page_allocator();
   
   load_page_directory(make_page_directory_nopaging());
-  enable_paging();  
+  enable_paging();
 }

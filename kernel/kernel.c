@@ -27,8 +27,8 @@ void kmain(){
   memory_init();
 
   interrupts_init();
-  add_interrupt_handler(0x80, (uint32_t) interrupt_handler);
-  
+  add_interrupt_handler(0x80, (uint32_t) interrupt_handler);  
+
   clear_screen();
 
   kprintln("TEST");

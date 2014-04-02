@@ -3,8 +3,8 @@
 
 void memory_init(void);
 
-uint8_t * make_page_directory(void);
-void load_page_directory(uint8_t *);
+uint32_t * make_page_directory(void);
+void load_page_directory(uint32_t *);
 
 void allocate_physical_page(uint32_t);
 void free_physical_page(uint32_t);

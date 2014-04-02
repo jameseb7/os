@@ -28,7 +28,7 @@ extern multiboot_data * mb_data;
 
 extern uint32_t OS_end;
 
-uint8_t * make_page_directory_nopaging(void);
+uint32_t * make_page_directory_nopaging(void);
 void index_pages(void);
 
 void index_pages(){
@@ -133,20 +133,20 @@ void free_physical_page(uint32_t virtual_page_address){
 
 uint32_t * page_stack_pop(void);
 
-uint8_t * make_page_directory_nopaging(){
+uint32_t * make_page_directory_nopaging(){
   uint32_t * page_directory = page_stack_pop();
   uint32_t * page_table = page_stack_pop();
   uint32_t i;
 
-  page_directory[0] = ((uint32_t) &page_table) | PDE_PRESENT | PDE_WRITEABLE;
+  page_directory[0] = ((uint32_t) page_table) | PDE_PRESENT | PDE_WRITEABLE;
   for(i = 1; i < 1023; i++) page_directory[i] = 0x00000000;
-  page_directory[1023] = ((uint32_t) &page_directory) | PDE_PRESENT | PDE_WRITEABLE;
+  page_directory[1023] = ((uint32_t) page_directory) | PDE_PRESENT | PDE_WRITEABLE;
   
   /*set up identity paging up to the end of the OS*/
   for(i = 0; i*(1 << 12) < (uint32_t) &OS_end; i++) page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
   for(; i < 1024; i++) page_table[i] = 0x00000000;
-   
-  return (uint8_t *) page_directory;
+  
+  return (uint32_t *) page_directory;
 }
 
 uint32_t * page_stack_pop(){
