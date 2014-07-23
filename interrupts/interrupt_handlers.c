@@ -6,7 +6,7 @@ void divide_by_zero_handler(void);
 void double_fault_handler(void);
 void invalid_tss_handler(void);
 void segment_not_present_handler(uint16_t);
-void general_protection_fault_handler(void);
+void general_protection_fault_handler(uint32_t);
 void page_fault_handler(void);
 
 void divide_by_zero_handler(){
@@ -30,8 +30,9 @@ void segment_not_present_handler(uint16_t selector){
   halt();
 }
 
-void general_protection_fault_handler(){
-  kprintln("ERROR: General protection fault");
+void general_protection_fault_handler(uint32_t error_code){
+  kprint("ERROR: General protection fault");
+  kprintln_uint32(error_code);
   halt();
 }
 

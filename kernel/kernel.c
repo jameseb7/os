@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "koutput.h"
 #include "interrupts.h"
+#include "processes.h"
 
 extern uint32_t mb_magic;
 
@@ -25,9 +26,14 @@ void kmain(){
   }
 
   memory_init();
+  kprintln("memory initialised");
 
   interrupts_init();
   add_interrupt_handler(0x80, (uint32_t) interrupt_handler);  
+  kprintln("interrupts initialised");
+
+  processes_init();
+  kprintln("processes initialised");
 
   clear_screen();
 

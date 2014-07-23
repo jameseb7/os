@@ -6,6 +6,7 @@ SECTIONS
 
     .text ALIGN (0x1000) :
     {
+		kernel/loader.o(.text)
         *(.text)
     }
 
