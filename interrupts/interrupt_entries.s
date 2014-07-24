@@ -50,6 +50,18 @@ interrupt0xE:
 	popa
 	iret
 
-	.global	empty_interrupt_entry
+	.global interrupt0x20
+interrupt0x20:
+	pusha
+	call timer_handler
+	popa
+	iret
+
+	.global	empty__hardware_interrupt_entry
 empty_interrupt_entry:
+	push %eax
+	mov  $0x20, %al
+	outb %al, $0x20
+	outb %al, $0xA0
+	pop  %eax
 	iret

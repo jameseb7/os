@@ -18,11 +18,11 @@ extern void interrupt0xA(void);
 extern void interrupt0xB(void);
 extern void interrupt0xD(void);
 extern void interrupt0xE(void);
+extern void interrupt0x20(void);
 extern void empty_interrupt_entry(void);
 
 void remap_interrupts(void);
-uint8_t inb(uint16_t);
-void outb(uint16_t, uint8_t);
+void init_timer(void);
 
 void add_interrupt_handler(uint8_t interrupt, uint32_t handler_address){
   idt[interrupt].offset_low      = (uint16_t) (handler_address & 0xFFFF);
@@ -36,6 +36,9 @@ void interrupts_init(){
 	uint8_t i;
 
 	remap_interrupts();
+	init_timer();
+
+	/*add exception handlers*/
 	add_interrupt_handler(0x00, (uint32_t) interrupt0x0);
 	add_interrupt_handler(0x08, (uint32_t) interrupt0x8);
 	add_interrupt_handler(0x0A, (uint32_t) interrupt0xA);
@@ -45,8 +48,11 @@ void interrupts_init(){
 	
 	/*put an empty handler in for hardware interrupts until something can be found to handle them*/
 	for(i = 0x20; i <= 0x28; i++){
-		add_interrupt_handler(i, (uint32_t) empty_interrupt_entry);
+		add_interrupt_handler(i, (uint32_t) interrupt0x20);
 	}
+
+	/*add hardware interrupt handlers*/
+	add_interrupt_handler(0x20, (uint32_t) interrupt0x20);
 	
 	__asm__(".lcomm  idtr, 6 \n\t"
 			"movw %1, idtr   \n\t"
@@ -60,11 +66,11 @@ void interrupts_init(){
 }
 
 void remap_interrupts(){
-  uint8_t tmp1, tmp2;
+	//uint8_t tmp1, tmp2;
 
    /*store the PIC masks from the data ports*/
-   tmp1 = inb(0x21);
-   tmp2 = inb(0xA1);
+   //tmp1 = inb(0x21);
+   //tmp2 = inb(0xA1);
 
    /*send initialisation byte to the PIC command ports*/
    outb(0x20, 0x11); /*PIC master*/
@@ -88,15 +94,21 @@ void remap_interrupts(){
    outb(0x80, 0x00); /*wait extra cycle for IO to complete*/
 
    /*restore the PIC masks*/
-   outb(0x21, tmp1);
-   outb(0xA1, tmp2);	   
+   outb(0x21, 0x00);
+   outb(0xA1, 0x00);	   
 }
 
-uint8_t inb(uint16_t port){
-  uint8_t data;
-  __asm__("inb %1, %0 \n\t" : "=a"(data) : "Nd"(port) : );
-    return data;
+#define CLOCK_FREQ 100
+void init_timer(){
+	int divisor = 1193180/CLOCK_FREQ;
+
+	/*channel 0 -- lobyte/hibyte -- mode 3 -- binary*/
+	/*    00    --       11      --  011   --   0   */
+	outb(0x43, 0x36); /*set the PIT command register*/
+
+	/*write the divisor to the PIT data register for channel 0*/ 
+	outb(0x40, (uint8_t) (divisor & 0xFF));
+	outb(0x40, (uint8_t) ((divisor >> 8) & 0xFF));
 }
-void outb(uint16_t port, uint8_t data){
-  __asm__("outb %0, %1\n\t" : : "a"(data), "Nd"(port) : );
-}
+
+

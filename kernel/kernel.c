@@ -59,6 +59,11 @@ void kmain(){
   ptr += 0x3FF0 >> 2;
   *ptr = 14;
   kprintln_uint32(*ptr);
+
+  __asm__("sti");
+  for(;;){
+	  __asm__("hlt");
+  }
 }
 
 void halt(){
@@ -66,6 +71,15 @@ void halt(){
   for(;;){
     __asm__("hlt");
   }
+}
+
+uint8_t inb(uint16_t port){
+  uint8_t data;
+  __asm__("inb %1, %0 \n\t" : "=a"(data) : "Nd"(port) : );
+    return data;
+}
+void outb(uint16_t port, uint8_t data){
+  __asm__("outb %0, %1\n\t" : : "a"(data), "Nd"(port) : );
 }
 
 void interrupt_handler(void){
