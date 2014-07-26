@@ -1,10 +1,23 @@
 #include "kutil.h"
 
+void sti(void){
+	__asm__("sti");
+}
+void cli(void){
+	__asm__("cli");
+}
+
 void halt(){
-  __asm__("cli");
   for(;;){
     __asm__("hlt");
   }
+}
+
+void error(const char * str){
+	kprintln("");
+	kprintln(str);
+	cli();
+	halt();
 }
 
 uint8_t inb(uint16_t port){

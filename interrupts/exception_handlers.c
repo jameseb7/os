@@ -9,29 +9,28 @@ void general_protection_fault_handler(uint32_t);
 void page_fault_handler(void);
 
 void divide_by_zero_handler(){
-  kprintln("ERROR: Division by zero");
-  halt();
+  error("ERROR: Division by zero");
 }
 
 void double_fault_handler(){
-  kprintln("ERROR: Double fault");
-  halt();
+  error("ERROR: Double fault");
 }
 
 void invalid_tss_handler(){
-  kprintln("ERROR: Invalid TSS");
-  halt();
+  error("ERROR: Invalid TSS");
 }
 
 void segment_not_present_handler(uint16_t selector){
   kprint("ERROR: Segment not present:");
   kprintln_uint32((uint32_t) selector);
+  cli();
   halt();
 }
 
 void general_protection_fault_handler(uint32_t error_code){
   kprint("ERROR: General protection fault");
   kprintln_uint32(error_code);
+  cli();
   halt();
 }
 
@@ -47,5 +46,6 @@ void page_fault_handler(){
   kprint("address: ");
   kprintln_uint32(address);
 
+  cli();
   halt();
 }

@@ -59,10 +59,8 @@ void kmain(){
   *ptr = 14;
   kprintln_uint32(*ptr);
 
-  __asm__("sti");
-  for(;;){
-	  __asm__("hlt");
-  }
+  sti();
+  halt();
 }
 
 void interrupt_handler(void){
