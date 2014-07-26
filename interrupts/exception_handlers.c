@@ -1,6 +1,5 @@
 #include <stdint.h>
-#include "koutput.h"
-#include "kernel.h"
+#include "kutil.h"
 
 void divide_by_zero_handler(void);
 void double_fault_handler(void);

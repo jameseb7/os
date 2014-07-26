@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include "multiboot.h"
-#include "koutput.h"
-#include "kernel.h"
+#include "kutil.h"
 #include "memory.h"
 
 #define PDE_PRESENT       1 << 0

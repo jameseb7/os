@@ -1,5 +1,5 @@
-#ifndef KOUTPUT_H
-#define KOUTPUT_H
+#ifndef KUTIL_H
+#define KUTIL_H
 
 #include <stdint.h>
 
@@ -11,4 +11,9 @@ void kprintln_uint32(uint32_t input);
 void kprint_uint64(uint64_t input);
 void kprintln_uint64(uint64_t input);
 
-#endif /*KOUTPUT_H*/
+void halt(void);
+
+uint8_t inb(uint16_t);
+void outb(uint16_t, uint8_t);
+
+#endif /*KUTIL_H*/

@@ -1,1 +1,0 @@
-SRC += koutput/koutput.c

@@ -1,5 +1,4 @@
-#include "kernel.h"
-#include "koutput.h"
+#include "kutil.h"
 
 void timer_handler(void);
 

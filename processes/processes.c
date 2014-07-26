@@ -1,5 +1,5 @@
 #include "processes.h"
-#include "koutput.h"
+#include "kutil.h"
 
 struct process{
 	uint32_t page_table;

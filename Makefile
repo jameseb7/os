@@ -9,7 +9,7 @@ WARNINGS := -Wall -Werror -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-alig
 CFLAGS := -ggdb -ffreestanding $(WARNINGS) -std=c99
 
 #based on 'Recursive Make Considered Harmful'
-MODULES := interrupts kernel koutput memory processes
+MODULES := interrupts kernel kutil memory processes
 CFLAGS += $(patsubst %, -I%, $(MODULES))
 SRC := 
 include $(patsubst %,%/module.mk,$(MODULES))

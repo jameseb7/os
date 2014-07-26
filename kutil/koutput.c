@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "koutput.h"
+#include "kutil.h"
 
 static volatile char * videoram = (char *) 0xB8000;
 static unsigned int current_row = 0;
