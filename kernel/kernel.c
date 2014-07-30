@@ -10,7 +10,7 @@ void kmain(void);
 void interrupt_handler(void);
 
 void kmain(){
-  uint32_t * ptr;
+  char * ptr;
 
   clear_screen();
   kprintln("KERNEL STARTED");
@@ -24,6 +24,9 @@ void kmain(){
     return;
   }
 
+  kutil_init();
+  kprintln("kutil initialised");
+
   memory_init();
   kprintln("memory initialised");
 
@@ -36,30 +39,57 @@ void kmain(){
 
   clear_screen();
 
-  kprintln("TEST");
-  __asm__("int $0x80");
-
-  ptr = allocate_virtual_pages_high(0x1000);
-  kprint("allocated (1): ");
+  ptr = kalloc(2);
+  kprint("allocation 1: ");
   kprintln_uint32((uint32_t) ptr);
-  *ptr = 3;
-  kprintln_uint32(*ptr);
+  *ptr = '1';
 
-  ptr = allocate_virtual_pages_high(0x4000);
-  kprint("allocated (2): ");
+  ptr = kalloc(10);
+  kprint("allocation 2: ");
   kprintln_uint32((uint32_t) ptr);
-  ptr += 0x3FF0 >> 2;
-  *ptr = 10;
-  kprintln_uint32(*ptr);
-
-  ptr = allocate_virtual_pages_low(0x4000);
-  kprint("allocated (3): ");
+  *ptr = 'a';
+  *(ptr+1) = 'l';
+  *(ptr+2) = 'l';
+  *(ptr+3) = 'o';
+  *(ptr+4) = 'c';
+  *(ptr+5) = '-';
+  *(ptr+6) = '-';
+  *(ptr+7) = '-';
+  *(ptr+8) = '2';
+  
+  ptr = kalloc(5);
+  kprint("allocation 3: ");
   kprintln_uint32((uint32_t) ptr);
-  ptr += 0x3FF0 >> 2;
-  *ptr = 14;
-  kprintln_uint32(*ptr);
+  *ptr = 'a';
+  *(ptr+1) = 'l';
+  *(ptr+2) = 'c';
+  *(ptr+3) = '3';
 
-  sti();
+  ptr = kalloc(18);
+  kprint("allocation 4: ");
+  kprintln_uint32((uint32_t) ptr);
+  *ptr = 'a';
+  *(ptr+1) = 'l';
+  *(ptr+2) = 'l';
+  *(ptr+3) = 'o';
+  *(ptr+4) = 'c';
+  *(ptr+5) = 'a';
+  *(ptr+6) = 't';
+  *(ptr+7) = 'i';
+  *(ptr+8) = 'o';
+  *(ptr+9) = 'n';
+  *(ptr+10) = '-';
+  *(ptr+11) = '-';
+  *(ptr+12) = '-';
+  *(ptr+13) = '-';
+  *(ptr+14) = '-';
+  *(ptr+15) = '-';
+  *(ptr+16) = '4';
+
+  kprintn((char *) 0x00007E00, 80);
+  kprintn((char *) 0x0007FF00, 0x100);
+
+  cli();
   halt();
 }
 

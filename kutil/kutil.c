@@ -1,5 +1,10 @@
 #include "kutil.h"
 
+void kalloc_init(void);
+void kutil_init(){
+	kalloc_init();
+}
+
 void sti(void){
 	__asm__("sti");
 }

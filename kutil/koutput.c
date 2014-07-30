@@ -11,6 +11,10 @@ char * uint64_to_hex_string(uint64_t input);
 unsigned int write_screen(const char * str,
                           char foreclr, char backclr,
                           unsigned int x, unsigned int y);
+void write_screen_n(const char * str,
+					unsigned int n,
+					char foreclr, char backclr,
+					unsigned int x, unsigned int y);
 
 unsigned int write_screen(const char * str,
 			  char foreclr, char backclr,
@@ -24,6 +28,19 @@ unsigned int write_screen(const char * str,
       videoram[2*(80*y + x + i) + 1] = backclr | foreclr;
    }
    return i;
+}
+
+void write_screen_n(const char * str,
+					unsigned int n,
+					char foreclr, char backclr,
+					unsigned int x, unsigned int y){
+	unsigned int i; /*string index*/
+	for(i = 0; i < n; i++){
+      videoram[2*(80*y + x + i)] = str[i];
+      foreclr = (char) foreclr & ((char) 0x0F);
+      backclr = (char) (backclr << 4);
+      videoram[2*(80*y + x + i) + 1] = backclr | foreclr;
+   }
 }
 
 void clear_screen(){
@@ -43,6 +60,15 @@ void kprint(const char * str){
       current_col = 0;
       current_row++;
    }
+}
+
+void kprintn(const char * str, unsigned int n){
+	write_screen_n(str, n, 0x07, 0x00, current_col, current_row);
+	current_col += n;
+	if(current_col >= 80){
+		current_col = 0;
+		current_row++;
+	}
 }
    
 void kprintln(const char * str){
@@ -108,7 +134,7 @@ char parse_nybble(uint8_t nybble){
 }
 
 char * uint32_to_hex_string(uint32_t input){
-   char * output = (char *) 0x00007E00;
+   char * output = (char *) 0x00000500;
    int i;
    
    output[0] = '0';
@@ -124,7 +150,7 @@ char * uint32_to_hex_string(uint32_t input){
 }
 
 char * uint64_to_hex_string(uint64_t input){
-  char * output = (char *) 0x00007E00;
+  char * output = (char *) 0x00000500;
    int i;
    
    output[0] = '0';
