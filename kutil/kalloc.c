@@ -90,6 +90,6 @@ void * kalloc(uint32_t size) {
 	}
 
 	free_block->size_type |= USED_BLOCK;
-	return (free_block + sizeof(struct block_header));
+	return (void *) ((uint32_t) free_block + sizeof(struct block_header));
 	
 }
