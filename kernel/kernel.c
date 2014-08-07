@@ -44,6 +44,9 @@ void kmain(){
   kprintln_uint32((uint32_t) ptr);
   *ptr = '1';
 
+  kprintn((char *) ((uint32_t) ptr - 16), 0x100);
+  kprintln("");
+
   ptr = kalloc(10);
   kprint("allocation 2: ");
   kprintln_uint32((uint32_t) ptr);
@@ -57,6 +60,9 @@ void kmain(){
   *(ptr+7) = '-';
   *(ptr+8) = '2';
   
+  kprintn((char *) ((uint32_t) ptr - 16), 0x100);
+  kprintln("");
+
   ptr = kalloc(5);
   kprint("allocation 3: ");
   kprintln_uint32((uint32_t) ptr);
@@ -64,6 +70,9 @@ void kmain(){
   *(ptr+1) = 'l';
   *(ptr+2) = 'c';
   *(ptr+3) = '3';
+
+  kprintn((char *) ((uint32_t) ptr - 16), 0x100);
+  kprintln("");
 
   ptr = kalloc(18);
   kprint("allocation 4: ");
@@ -86,8 +95,8 @@ void kmain(){
   *(ptr+15) = '-';
   *(ptr+16) = '4';
 
-  kprintn((char *) 0x00007E00, 80);
-  kprintn((char *) 0x0007FF00, 0x100);
+  kprintn((char *) ((uint32_t) ptr - 16), 0x100);
+  kprintln("");
 
   cli();
   halt();
