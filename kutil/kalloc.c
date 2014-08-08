@@ -48,8 +48,8 @@ void * kalloc(uint32_t size) {
 
 	/*make sure the size is big enough*/
 	size += sizeof(struct block_header);
-	if(size < (1 << 7)){
-		size = 1 << 7;
+	if(size < (1 << 4)){
+		size = 1 << 4;
 	}
 
 	/*take the base 2 logarithm of the size, rounding up*/
