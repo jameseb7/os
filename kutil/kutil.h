@@ -6,6 +6,7 @@
 void kutil_init(void);
 
 void * kalloc(uint32_t size);
+void kfree(void *);
 
 void clear_screen(void);
 void kprint(const char * str);

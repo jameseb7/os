@@ -12,6 +12,7 @@ struct free_block_header{
 	uint32_t magic;
 	uint32_t size_type;
 	struct free_block_header * next;
+	struct free_block_header * prev;
 };
 
 #define MAGIC 0x4D454D4B
@@ -36,6 +37,7 @@ void kalloc_init(){
 	memory_start->magic = MAGIC;
 	memory_start->size_type = FREE_BLOCK | NYBBLES(1,8) | 18;
 	memory_start->next = NULL;
+	memory_start->prev = NULL;
 
 	free_blocks[18] = memory_start;
 }
@@ -69,6 +71,7 @@ void * kalloc(uint32_t size) {
 
 
 	free_block = free_blocks[i];
+	free_blocks[i]->prev = NULL;
 	free_blocks[i] = free_blocks[i]->next;
 
 	/*split the block if necessary*/
@@ -86,6 +89,7 @@ void * kalloc(uint32_t size) {
 					(uint8_t) SIZE(free_block) % 10) |
 			SIZE(free_block);
 		spare_block->next = free_blocks[SIZE(free_block)];
+		free_blocks[SIZE(free_block)]->prev = spare_block;
 		free_blocks[SIZE(free_block)] = spare_block;
 	}
 
@@ -93,4 +97,38 @@ void * kalloc(uint32_t size) {
 	free_block->size_type |= USED_BLOCK;
 	return (void *) ((uint32_t) free_block + sizeof(struct block_header));
 	
+}
+
+void kfree(void * ptr){
+	struct free_block_header * free_block = (void *) ((uint32_t) ptr - 8);
+	struct free_block_header * buddy_block = NULL;
+
+	if(free_block->magic != MAGIC){
+		error("Invalid block magic number in kfree");
+	}
+
+	free_block->size_type &= 0x00FFFFFF;
+	free_block->size_type |= FREE_BLOCK;
+
+	while((BUDDY(free_block)->magic == MAGIC) &&
+		  (SIZE(BUDDY(free_block)) == SIZE(free_block)) &&
+		  (TYPE(BUDDY(free_block)) == FREE_BLOCK)){
+		if(BUDDY(free_block) > free_block){
+			buddy_block = BUDDY(free_block);
+		}else{
+			buddy_block = free_block;
+			free_block = BUDDY(free_block);
+		}
+
+		buddy_block->magic = 0;
+		buddy_block->size_type = 0;
+		buddy_block->next->prev = buddy_block->prev;
+		buddy_block->prev->next = buddy_block->next;
+
+		free_block->size_type = 
+			FREE_BLOCK |
+			NYBBLES((uint8_t) (((SIZE(free_block) + 1) % 10) - (SIZE(free_block) + 1)),
+					(uint8_t) (SIZE(free_block) + 1) % 10) |
+			(SIZE(free_block) + 1);
+	}
 }

@@ -74,6 +74,8 @@ void kmain(){
   kprintn((char *) ((uint32_t) ptr - 8), 0x100);
   kprintln("");
 
+  kfree(ptr);
+
   ptr = kalloc(18);
   kprint("allocation 4: ");
   kprintln_uint32((uint32_t) ptr);
