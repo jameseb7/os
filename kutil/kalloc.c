@@ -16,7 +16,7 @@ struct free_block_header{
 
 #define MAGIC 0x4D454D4B
 #define FREE_BLOCK 0x46000000
-#define USED_BLOCK 0x46000000
+#define USED_BLOCK 0x55000000
 #define SIZE(x) ((x)->size_type & 0x000000FF)
 #define TYPE(x) ((x)->size_type & 0xFF000000)
 #define BUDDY(x) ((struct free_block_header *) \
@@ -89,6 +89,7 @@ void * kalloc(uint32_t size) {
 		free_blocks[SIZE(free_block)] = spare_block;
 	}
 
+	free_block->size_type &= 0x00FFFFFF;
 	free_block->size_type |= USED_BLOCK;
 	return (void *) ((uint32_t) free_block + sizeof(struct block_header));
 	
