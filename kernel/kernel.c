@@ -100,6 +100,17 @@ void kmain(){
   kprintn((char *) ((uint32_t) ptr - 8), 0x100);
   kprintln("");
 
+  ptr = kalloc(5);
+  kprint("allocation 5: ");
+  kprintln_uint32((uint32_t) ptr);
+  *ptr = 'a';
+  *(ptr+1) = 'l';
+  *(ptr+2) = 'c';
+  *(ptr+3) = '5';
+
+  kprintn((char *) ((uint32_t) ptr - 8), 0x100);
+  kprintln("");
+
   cli();
   halt();
 }

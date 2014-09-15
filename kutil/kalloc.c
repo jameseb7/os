@@ -50,9 +50,6 @@ void * kalloc(uint32_t size) {
 
 	/*make sure the size is big enough*/
 	size += sizeof(struct block_header);
-	if(size < (1 << 4)){
-		size = 1 << 4;
-	}
 
 	/*take the base 2 logarithm of the size, rounding up*/
 	for(; size > ((uint32_t) (1 << log_size)); log_size++);
@@ -102,6 +99,7 @@ void * kalloc(uint32_t size) {
 void kfree(void * ptr){
 	struct free_block_header * free_block = (void *) ((uint32_t) ptr - 8);
 	struct free_block_header * buddy_block = NULL;
+	unsigned int size;
 
 	if(free_block->magic != MAGIC){
 		error("Invalid block magic number in kfree");
@@ -110,9 +108,19 @@ void kfree(void * ptr){
 	free_block->size_type &= 0x00FFFFFF;
 	free_block->size_type |= FREE_BLOCK;
 
+	size = SIZE(free_block);
+
+	//put the free block in the list of free blocks
+	free_block->next = free_blocks[size];
+	free_block->prev = NULL;
+	free_blocks[size] = free_block;
+
+	//for each buddy that's also free, merge them
 	while((BUDDY(free_block)->magic == MAGIC) &&
 		  (SIZE(BUDDY(free_block)) == SIZE(free_block)) &&
 		  (TYPE(BUDDY(free_block)) == FREE_BLOCK)){
+		
+		//make sure the second block is treated as the buddy block
 		if(BUDDY(free_block) > free_block){
 			buddy_block = BUDDY(free_block);
 		}else{
@@ -120,15 +128,38 @@ void kfree(void * ptr){
 			free_block = BUDDY(free_block);
 		}
 
+		size = SIZE(free_block);
+
+		//remove the buddy block from the allocator as it's being merged
 		buddy_block->magic = 0;
 		buddy_block->size_type = 0;
-		buddy_block->next->prev = buddy_block->prev;
-		buddy_block->prev->next = buddy_block->next;
+		if(buddy_block->next != NULL){
+			buddy_block->next->prev = buddy_block->prev;
+		}
+		if(buddy_block->prev != NULL){
+			buddy_block->prev->next = buddy_block->next;
+		}
 
+		//increase the size of the free block
+		size++;
 		free_block->size_type = 
 			FREE_BLOCK |
-			NYBBLES((uint8_t) (((SIZE(free_block) + 1) % 10) - (SIZE(free_block) + 1)),
-					(uint8_t) (SIZE(free_block) + 1) % 10) |
-			(SIZE(free_block) + 1);
+			NYBBLES((uint8_t) ((size % 10) - size), (uint8_t) size % 10) |
+			size;
+		
+		//remove the free block from the the old list of free blocks
+		if(free_block->next != NULL){
+			free_block->next->prev = free_block->prev;
+		}
+		if(free_block->prev != NULL){
+			free_block->prev->next = free_block->next;
+		}else{
+			free_blocks[size-1] = free_blocks[size-1]->next;
+		}
+
+		//put the free block in the new list of free blocks
+		free_block->next = free_blocks[size];
+		free_block->prev = NULL;
+		free_blocks[size] = free_block;
 	}
 }
