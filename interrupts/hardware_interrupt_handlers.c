@@ -1,18 +1,17 @@
 #include "kutil.h"
+#include "processes.h"
 
 void timer_handler(void);
 
-uint32_t counter = 100;
+uint32_t counter = 0;
 void timer_handler(){
-	__asm__("cli");
+	cli();
 
-	if(counter <= 0){
-		kprint("tick ");
-		counter = 100;
-	}else{
-		counter--;
+	counter++;
+	if(counter % 3 == 0){
+		run_next_process();
 	}
 
 	outb(0x20, 0x20);
-	__asm__("sti");
+	sti();
 }

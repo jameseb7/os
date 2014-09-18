@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "processes.h"
 #include "kutil.h"
 
@@ -16,8 +18,18 @@ struct process{
 };
 
 #define MAX_PROCESSES (1 << 16)
+#define NULL_PROCESS 0
 
+//keep index 0 as a null value
 struct process process_table[MAX_PROCESSES];
+
+uint16_t process_queue_front = NULL_PROCESS;
+uint16_t process_queue_back = NULL_PROCESS;
+uint16_t current_process = NULL_PROCESS;
+
+void push_to_process_queue(uint16_t);
+uint16_t pop_from_process_queue(void);
+
 
 void processes_init(){
 	int i;
@@ -35,13 +47,15 @@ void processes_init(){
 
 	/*make the current process the first process*/
 	__asm__("movl %%cr4, %0": "=r"(current_page_table));
-	process_table[0].page_directory = current_page_table;
-	process_table[0].prev = 0;
-	process_table[0].next = 0;
-	process_table[0].parent = 0;
-	process_table[0].children = 0;
-	process_table[0].prev_child = 0;
-	process_table[0].next_child = 0;
+	process_table[1].page_directory = current_page_table;
+	process_table[1].prev = 0;
+	process_table[1].next = 0;
+	process_table[1].parent = 0;
+	process_table[1].children = 0;
+	process_table[1].prev_child = 0;
+	process_table[1].next_child = 0;
+
+	push_to_process_queue(1);
 }
 
 void switch_process(uint16_t, uint16_t);
@@ -51,4 +65,54 @@ void switch_process(uint16_t old_process, uint16_t new_process){
 	process_table[old_process].stack_pointer = 
 		switch_process_asm(process_table[new_process].stack_pointer,
 						   process_table[new_process].page_directory);
+}
+
+void run_next_process(){
+	uint16_t old_process = current_process;
+	
+	push_to_process_queue(current_process);
+	current_process = pop_from_process_queue();
+
+	//stop and wait for interrupts if there is no current process
+	if(current_process == NULL_PROCESS){
+		sti();
+		outb(0x20, 0x20); //send the end of interrupt signal to the PIC master
+		outb(0xA0, 0x20); //send the end of interrupt signal to the PIC slave
+		halt();
+	}
+
+	switch_process(old_process, current_process);
+}
+	
+
+void push_to_process_queue(uint16_t process_id){
+	if(process_queue_back == NULL_PROCESS){
+		//empty queue so make the process the front and back
+		process_queue_back = process_id;
+		process_queue_front = process_id;
+	}else{
+		process_table[process_queue_back].next = process_id;
+		process_table[process_id].prev = process_queue_back;
+		process_table[process_id].next = NULL_PROCESS;
+		process_queue_back = process_id;
+	}
+}
+		
+	
+uint16_t pop_from_process_queue(){
+	uint16_t return_value = 0;
+
+	return_value = process_queue_front;
+	process_queue_front = process_table[process_queue_front].next;
+	process_table[process_queue_front].prev = NULL_PROCESS;
+
+	if(process_queue_front == NULL_PROCESS){
+		//empty queue so remove the back
+		process_queue_back = NULL_PROCESS;
+	}
+
+	process_table[return_value].next = NULL_PROCESS;
+	process_table[return_value].prev = NULL_PROCESS;
+
+	return return_value;
 }
