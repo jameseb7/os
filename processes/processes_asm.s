@@ -27,3 +27,32 @@ switch_process_asm:
 		//end the stack frame and return
 		pop 	%ebp
 		ret
+
+//void run_idle_process(uint32_t * stack_pointer_store);
+		.global run_idle_process
+run_idle_process:
+		//set up the stack frame and push the registers to the stack
+		push 	%ebp
+		mov		%esp,					%ebp
+		pusha
+
+		//put the stack pointer store in eax
+		mov 	8(%ebp),				%eax
+
+		//save the current stack pointer
+		mov 	%esp, 					0(%eax)
+		
+		//set the stack pointer to the kernel bootstrap stack
+		mov 	kernel_stack_start(,1),	%esp
+
+		//set the interrupt flag and send the end of interrupt signal
+		sti		
+		mov  	$0x20, 					%al
+		outb 	%al, 					$0x20		
+		outb 	%al, 					$0xA0
+
+		//halt and wait for interrupts
+halt_loop:		
+		hlt
+		jmp 	halt_loop
+		

@@ -27,6 +27,10 @@ uint16_t process_queue_front = NULL_PROCESS;
 uint16_t process_queue_back = NULL_PROCESS;
 uint16_t current_process = NULL_PROCESS;
 
+void switch_process(uint16_t, uint16_t);
+uint32_t switch_process_asm(uint32_t, uint32_t);
+void run_idle_process(uint32_t *);
+
 void push_to_process_queue(uint16_t);
 uint16_t pop_from_process_queue(void);
 
@@ -59,9 +63,6 @@ void processes_init(){
 	process_table[1].next_child = 0;
 }
 
-void switch_process(uint16_t, uint16_t);
-uint32_t switch_process_asm(uint32_t, uint32_t);
-
 void switch_process(uint16_t old_process, uint16_t new_process){
 	process_table[old_process].stack_pointer = 
 		switch_process_asm(process_table[new_process].stack_pointer,
@@ -77,14 +78,10 @@ void run_next_process(){
 	//stop and wait for interrupts if there is no current process
 	if(current_process == NULL_PROCESS){
 		kprint("idle ");
-		__asm__("movl %0, %%esp" : : "r"(kernel_stack_start));
-		sti();
-		outb(0x20, 0x20); //send the end of interrupt signal to the PIC master
-		outb(0xA0, 0x20); //send the end of interrupt signal to the PIC slave
-		halt();
+		run_idle_process(&process_table[old_process].stack_pointer);
+	}else{ 
+		switch_process(old_process, current_process);
 	}
-
-	switch_process(old_process, current_process);
 }
 	
 
