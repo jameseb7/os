@@ -14,7 +14,7 @@ switch_process_asm:
 		mov		12(%ebp),	%eax
 
 		//load the new page table
-		mov		%eax,		%cr4
+		mov		%eax,		%cr3
 
 		//load the new stack pointer and store the old stack pointer
 		xchg	%eax,		%esp

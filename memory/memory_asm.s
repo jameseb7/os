@@ -6,8 +6,7 @@ make_page_directory:
 
         .lcomm  saved_stack, 4
         movl %esp, saved_stack
-        .comm kernel_stack_start, 4
-        movl $kernel_stack_start, %esp
+        movl kernel_stack_start(,1), %esp
 
 stack_in_kernel_space:
         call disable_paging

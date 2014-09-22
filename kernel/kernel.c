@@ -38,9 +38,8 @@ void kmain(){
 
   clear_screen();
 
-  while(1){
-	  kprint(".");
-  }
+  sti();
+  halt();
 }
 
 void interrupt_handler(void){

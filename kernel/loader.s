@@ -20,11 +20,13 @@
 .comm mb_data, 4                                # space to store pointer to Multiboot data structure
 .comm mb_magic, 4                               # space to store pointer to Multiboot magic number
 
-.set  kernel_stack_start, $kernel_stack + STACKSIZE
+.global kernel_stack_start
+kernel_stack_start:
+		.long kernel_stack + STACKSIZE
         
 loader:
     cli	
-    movl  $(kernel_stack + STACKSIZE), %esp     # set up the stack
+    movl  kernel_stack_start(,1), %esp     # set up the stack
     movl  %eax, mb_magic                        # Multiboot magic number
     movl  %ebx, mb_data                         # Multiboot data structure
         

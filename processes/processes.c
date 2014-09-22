@@ -30,6 +30,8 @@ uint16_t current_process = NULL_PROCESS;
 void push_to_process_queue(uint16_t);
 uint16_t pop_from_process_queue(void);
 
+extern uint32_t kernel_stack_start;
+
 
 void processes_init(){
 	int i;
@@ -37,6 +39,7 @@ void processes_init(){
 
 	for(i = 0; i < MAX_PROCESSES; i++){
 		process_table[i].page_directory = 0;
+		process_table[i].stack_pointer = 0;
 		process_table[i].prev = 0;
 		process_table[i].next = 0;
 		process_table[i].parent = 0;
@@ -46,7 +49,7 @@ void processes_init(){
 	}
 
 	/*make the current process the first process*/
-	__asm__("movl %%cr4, %0": "=r"(current_page_table));
+	__asm__("movl %%cr3, %0": "=r"(current_page_table));
 	process_table[1].page_directory = current_page_table;
 	process_table[1].prev = 0;
 	process_table[1].next = 0;
@@ -54,8 +57,6 @@ void processes_init(){
 	process_table[1].children = 0;
 	process_table[1].prev_child = 0;
 	process_table[1].next_child = 0;
-
-	push_to_process_queue(1);
 }
 
 void switch_process(uint16_t, uint16_t);
@@ -75,6 +76,8 @@ void run_next_process(){
 
 	//stop and wait for interrupts if there is no current process
 	if(current_process == NULL_PROCESS){
+		kprint("idle ");
+		__asm__("movl %0, %%esp" : : "r"(kernel_stack_start));
 		sti();
 		outb(0x20, 0x20); //send the end of interrupt signal to the PIC master
 		outb(0xA0, 0x20); //send the end of interrupt signal to the PIC slave

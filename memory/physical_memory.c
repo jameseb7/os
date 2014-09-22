@@ -142,7 +142,7 @@ uint32_t * make_page_directory_nopaging(){
   page_directory[1023] = ((uint32_t) page_directory) | PDE_PRESENT | PDE_WRITEABLE;
   
   /*set up identity paging up to the end of the OS*/
-  for(i = 0; i*(1 << 12) < (uint32_t) &OS_end; i++) page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
+  for(i = 0; i << 12 < (uint32_t) &OS_end; i++) page_table[i] = (((uint32_t) i) << 12) | PTE_PRESENT | PTE_WRITEABLE;
   for(; i < 1024; i++) page_table[i] = 0x00000000;
   
   return (uint32_t *) page_directory;
