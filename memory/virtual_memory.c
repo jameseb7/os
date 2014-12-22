@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include "memory.h"
-#include "kernel.h"
+#include "kutil.h"
 
 extern uint32_t OS_end;
 static uint32_t low_pages_end;
