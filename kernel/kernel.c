@@ -9,7 +9,11 @@ extern uint32_t mb_magic;
 void kmain(void);
 void interrupt_handler(void);
 
+void print_A(void);
+void print_B(void);
+
 void kmain(){
+  cli();
 
   clear_screen();
   kprintln("KERNEL STARTED");
@@ -38,10 +42,30 @@ void kmain(){
 
   clear_screen();
 
+  add_process(&print_A);
+  halt();
+  add_process(&print_B);
+  halt();
+
+  check_process_stack();
+  halt();
+
   sti();
   halt();
 }
 
 void interrupt_handler(void){
    kprintln("Kernel interrupt");
+}
+
+void print_A(){
+	for(;;){
+		kprint("A");
+	}
+}
+
+void print_B(){
+	for(;;){
+		kprint("B");
+	}
 }

@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "kernel.h"
+#include "kutil.h"
 #include "interrupts.h"
 
 struct IDT_entry{
@@ -61,8 +61,6 @@ void interrupts_init(){
 			: /*outputs*/
 			: "r"(&idt), "r"((uint16_t) sizeof(idt)) /*inputs*/
 			: "%eax" /*clobbered registers*/);
-	
-	__asm__("sti");
 }
 
 void remap_interrupts(){

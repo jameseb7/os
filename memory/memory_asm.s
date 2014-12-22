@@ -1,11 +1,12 @@
         .global make_page_directory
         #uint8_t * make_page_directory()
-make_page_directory:    
+make_page_directory:
+		.lcomm  saved_stack, 4
+        movl %esp, saved_stack(,1)
+		
         cmpl OS_end, %esp
         jl   stack_in_kernel_space
 
-        .lcomm  saved_stack, 4
-        movl %esp, saved_stack
         movl kernel_stack_start(,1), %esp
 
 stack_in_kernel_space:
@@ -14,7 +15,7 @@ stack_in_kernel_space:
         call make_page_directory_nopaging
 
         call enable_paging
-        movl saved_stack, %esp
+        movl saved_stack(,1), %esp
 
         ret
 

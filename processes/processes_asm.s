@@ -28,6 +28,7 @@ switch_process_asm:
 		pop 	%ebp
 		ret
 
+
 //void run_idle_process(uint32_t * stack_pointer_store);
 		.global run_idle_process
 run_idle_process:
@@ -55,4 +56,34 @@ run_idle_process:
 halt_loop:		
 		hlt
 		jmp 	halt_loop
+
 		
+//void start_kernel_process(void (*start_function)(), uint32_t page_directory, uint32_t * stack_pointer_store);
+		.global start_kernel_process
+start_kernel_process:
+		//set up the stack frame and push the registers
+		push 	%ebp
+		mov		%esp,						%ebp
+		pusha
+
+		//put the start function address in edx and the page directory in eax and the stack pointer store in ebx
+		mov 	8(%ebp),					%edx
+		mov		12(%ebp),					%eax
+		mov		16(%ebp),					%ebx
+
+		//switch to the process' page table
+		mov		%eax, 						%cr3
+
+		//set the stack pointer to the start of the kernel stack and store the old stack pointer
+		mov		process_kernel_stack(,1),	%ecx
+		xchg	%ecx,						%esp
+		mov		%ecx,						0(%ebx)
+
+		//push the stack for the iret instruction
+		pushf 							//EFLAGS register
+		mov 	$0x08, 						%cx 
+		push 	%cx						//CS segment selector
+		push	%edx					//EIP value (address of start function)
+
+		//return to the new process
+		iret
