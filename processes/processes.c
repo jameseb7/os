@@ -72,7 +72,6 @@ void run_next_process(){
 		push_to_process_queue(current_process);
 	}
 	current_process = pop_from_process_queue();
-	kprint_uint32(current_process);
 
 	if(current_process == NULL_PROCESS){
 		//stop and wait for interrupts if there is no current process
@@ -80,16 +79,8 @@ void run_next_process(){
 		run_idle_process(&process_table[old_process].stack_pointer);
 	}else{
 		if(process_table[current_process].flags & STARTED){
-			kprint("process-switching-");
-			kprint_uint32(current_process);
-			kprint(" ");
-			halt();
 			switch_process(old_process, current_process);
 		}else{
-			kprint("process-starting-");
-			kprint_uint32(current_process);
-			kprint(" ");
-			halt();
 			process_table[current_process].flags |= STARTED;
 			start_kernel_process(process_table[current_process].start_function,
 								 process_table[current_process].page_directory, 

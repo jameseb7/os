@@ -43,12 +43,9 @@ void kmain(){
   clear_screen();
 
   add_process(&print_A);
-  halt();
   add_process(&print_B);
-  halt();
 
-  check_process_stack();
-  halt();
+  //check_process_stack();
 
   sti();
   halt();

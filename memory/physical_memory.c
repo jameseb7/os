@@ -22,8 +22,10 @@
 
 uint32_t * page_stack = (uint32_t *) 0x00000000;
 
-const uint32_t process_kernel_stack = 0xFFBFEFFF;
-const uint32_t process_user_stack   = 0xFFBFCFFF;
+const uint32_t process_kernel_stack     = 0xFFBFEFF8;
+const uint32_t process_user_stack       = 0xFFBFCFF8;
+static const uint32_t process_kernel_stack_end = 0xFFBFE000;
+static const uint32_t process_user_stack_end   = 0xFFBFC000;
 
 extern uint32_t mb_magic;
 extern multiboot_data * mb_data;
@@ -150,11 +152,11 @@ uint32_t * make_page_directory_nopaging(){
 
   /*set up paging for the process' stacks*/
   page_table = page_stack_pop();
-  page_directory[(process_kernel_stack & 0xFFC00000) >> 22] = 
+  page_directory[(process_kernel_stack_end & 0xFFC00000) >> 22] = 
 	  ((uint32_t) page_table) | PDE_PRESENT | PDE_WRITEABLE;
-  page_table[(process_kernel_stack & 0x003FF000) >> 12] =
+  page_table[(process_kernel_stack_end & 0x003FF000) >> 12] =
 	  ((uint32_t) page_stack_pop()) | PTE_PRESENT | PTE_WRITEABLE;
-  page_table[(process_user_stack & 0x003FF000) >> 12] =
+  page_table[(process_user_stack_end & 0x003FF000) >> 12] =
 	  ((uint32_t) page_stack_pop()) | PTE_PRESENT | PTE_WRITEABLE | PTE_USER;
   
   return (uint32_t *) page_directory;

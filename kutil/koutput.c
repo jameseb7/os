@@ -11,7 +11,7 @@ char * uint64_to_hex_string(uint64_t input);
 unsigned int write_screen(const char * str,
                           char foreclr, char backclr,
                           unsigned int x, unsigned int y);
-void write_screen_n(const char * str,
+unsigned int write_screen_n(const char * str,
 					unsigned int n,
 					char foreclr, char backclr,
 					unsigned int x, unsigned int y);
@@ -30,17 +30,18 @@ unsigned int write_screen(const char * str,
    return i;
 }
 
-void write_screen_n(const char * str,
+unsigned int write_screen_n(const char * str,
 					unsigned int n,
 					char foreclr, char backclr,
 					unsigned int x, unsigned int y){
 	unsigned int i; /*string index*/
-	for(i = 0; i < n; i++){
+	for(i = 0; i < n && i < 80; i++){
       videoram[2*(80*y + x + i)] = str[i];
       foreclr = (char) foreclr & ((char) 0x0F);
       backclr = (char) (backclr << 4);
       videoram[2*(80*y + x + i) + 1] = backclr | foreclr;
-   }
+	}
+	return i;
 }
 
 void clear_screen(){
@@ -60,14 +61,19 @@ void kprint(const char * str){
       current_col = 0;
       current_row++;
    }
+   if(current_row >= 25){
+	   current_row = 0;
+   }
 }
 
 void kprintn(const char * str, unsigned int n){
-	write_screen_n(str, n, 0x07, 0x00, current_col, current_row);
-	current_col += n;
+	current_col += write_screen_n(str, n, 0x07, 0x00, current_col, current_row);
 	if(current_col >= 80){
 		current_col = 0;
 		current_row++;
+	}
+	if(current_row >= 25){
+	   current_row = 0;
 	}
 }
    
