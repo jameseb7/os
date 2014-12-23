@@ -81,7 +81,7 @@ start_kernel_process:
 		mov		cr3, eax
 
 		;; set the stack pointer to the start of the kernel stack and store the old stack pointer
-		mov		ecx, process_kernel_stack
+		mov		ecx, [process_kernel_stack]
 		xchg	esp, ecx
 		mov		[ebx], ecx
 

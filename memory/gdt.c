@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "memory.h"
 
-extern uint32_t kernel_stack;
+extern uint32_t kernel_stack_start;
 
 struct GDT_entry{
    uint16_t limit_low;        /*Limit 0:15*/
@@ -103,7 +103,7 @@ void load_gdt(uint32_t gdt, uint16_t gdt_size);
 void setup_gdt(void);
 
 void setup_gdt(){
-  tss.esp0 = kernel_stack;
+  tss.esp0 = (uint32_t) &kernel_stack_start;
 
   gdt[3].base_low  = (uint16_t) ((uint32_t) &tss) & 0xFFFF;
   gdt[3].base_mid  = (uint8_t)  (((uint32_t) &tss) >> 16) & 0xFF;
