@@ -5,11 +5,17 @@ void kutil_init(){
 	kalloc_init();
 }
 
-void sti(void){
+void sti(const char * caller){
 	__asm__("sti");
+	// kprint("sti: ");
+	// kprintln(caller);
+	caller = caller;
 }
-void cli(void){
+void cli(const char * caller){
 	__asm__("cli");
+	// kprint("cli: ");
+	// kprintln(caller);
+	caller = caller;
 }
 
 void halt(){
@@ -21,7 +27,7 @@ void halt(){
 void error(const char * str){
 	kprintln("");
 	kprintln(str);
-	cli();
+	cli("error()");
 	halt();
 }
 

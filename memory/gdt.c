@@ -105,9 +105,9 @@ void setup_gdt(void);
 void setup_gdt(){
   tss.esp0 = (uint32_t) &kernel_stack_start;
 
-  gdt[3].base_low  = (uint16_t) ((uint32_t) &tss) & 0xFFFF;
-  gdt[3].base_mid  = (uint8_t)  (((uint32_t) &tss) >> 16) & 0xFF;
-  gdt[3].base_high = (uint8_t)  (((uint32_t) &tss) >> 24) & 0xFF;
+  gdt[3].base_low  = (uint16_t) (((uint32_t) &tss) & 0xFFFF);
+  gdt[3].base_mid  = (uint8_t)  ((((uint32_t) &tss) >> 16) & 0xFF);
+  gdt[3].base_high = (uint8_t)  ((((uint32_t) &tss) >> 24) & 0xFF);
   
 
   load_gdt((uint32_t) &gdt, sizeof(gdt));

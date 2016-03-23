@@ -13,7 +13,7 @@ void print_A(void);
 void print_B(void);
 
 void kmain(){
-  cli();
+  cli("kmain()");
 
   clear_screen();
   kprintln("KERNEL STARTED");
@@ -47,7 +47,7 @@ void kmain(){
 
   //check_process_stack();
 
-  sti();
+  sti("kmain()");
   halt();
 }
 
@@ -56,13 +56,22 @@ void interrupt_handler(void){
 }
 
 void print_A(){
+  int i = 0;
 	for(;;){
 		kprint("A");
+		sti("print_A()");
+		for(i=0; i < 100000000; i++){
+		}
 	}
 }
 
 void print_B(){
+  int i = 0;
 	for(;;){
 		kprint("B");
+		sti("print_B()");
+		// check_process_stack();
+		for(i=0; i < 100000000; i++){
+		}
 	}
 }

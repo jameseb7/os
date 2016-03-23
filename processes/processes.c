@@ -75,12 +75,18 @@ void run_next_process(){
 
 	if(current_process == NULL_PROCESS){
 		//stop and wait for interrupts if there is no current process
-		kprint("idle ");
+		kprintln("idle");
 		run_idle_process(&process_table[old_process].stack_pointer);
 	}else{
 		if(process_table[current_process].flags & STARTED){
-			switch_process(old_process, current_process);
+		  if (current_process != old_process) {
+		    kprint_uint32(current_process);
+		    kprintln(" switched");
+		    switch_process(old_process, current_process);
+		  }
 		}else{
+			kprint_uint32(current_process);
+			kprintln(" started");
 			process_table[current_process].flags |= STARTED;
 			start_kernel_process(process_table[current_process].start_function,
 								 process_table[current_process].page_directory, 
@@ -138,7 +144,9 @@ void add_process(void (*start_function)(void)){
 
 void check_process_stack(){
 	int i;
-	for(i = 0; i < 3; i++){
+	kprintln_uint32(process_queue_front);
+	kprintln_uint32(process_queue_back);
+	for(i = 0; i < 4; i++){
 		kprint_uint32(process_table[i].page_directory);
 		kprint_uint32(process_table[i].stack_pointer);
 		kprint_uint32(process_table[i].prev);
@@ -150,6 +158,6 @@ void check_process_stack(){
 		kprint_uint32(process_table[i].flags);
 		kprintln("");
 	}
-	cli();
+	cli("check_process_stack()");
 	halt();
 }

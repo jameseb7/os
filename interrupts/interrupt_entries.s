@@ -52,9 +52,11 @@ interrupt0xE:
 
 	.global interrupt0x20
 interrupt0x20:
+	cli
 	pusha
 	call timer_handler
 	popa
+	sti
 	iret
 
 	.global	empty__hardware_interrupt_entry

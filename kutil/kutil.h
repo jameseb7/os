@@ -17,8 +17,8 @@ void kprintln_uint32(uint32_t input);
 void kprint_uint64(uint64_t input);
 void kprintln_uint64(uint64_t input);
 
-void sti(void);
-void cli(void);
+void sti(const char *);
+void cli(const char *);
 void halt(void);
 void error(const char * str);
 

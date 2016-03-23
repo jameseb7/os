@@ -18,8 +18,8 @@ struct free_block_header{
 #define MAGIC 0x4D454D4B
 #define FREE_BLOCK 0x46000000
 #define USED_BLOCK 0x55000000
-#define SIZE(x) ((x)->size_type & 0x000000FF)
-#define TYPE(x) ((x)->size_type & 0xFF000000)
+#define SIZE(x) ((uint32_t) ((x)->size_type & 0x000000FF))
+#define TYPE(x) ((uint32_t) ((x)->size_type & 0xFF000000))
 #define BUDDY(x) ((struct free_block_header *) \
 				  (((uint32_t) x) ^ ((uint32_t) 1 << SIZE(x))))
 
@@ -83,7 +83,7 @@ void * kalloc(uint32_t size) {
 		spare_block->size_type = 
 			FREE_BLOCK |
 			NYBBLES((uint8_t) ((SIZE(free_block) % 10) - SIZE(free_block)),
-					(uint8_t) SIZE(free_block) % 10) |
+				(uint8_t) (SIZE(free_block) % 10)) |
 			SIZE(free_block);
 		spare_block->next = free_blocks[SIZE(free_block)];
 		free_blocks[SIZE(free_block)]->prev = spare_block;
@@ -144,7 +144,7 @@ void kfree(void * ptr){
 		size++;
 		free_block->size_type = 
 			FREE_BLOCK |
-			NYBBLES((uint8_t) ((size % 10) - size), (uint8_t) size % 10) |
+		  NYBBLES((uint8_t) ((size % 10) - size), (uint8_t) (size % 10)) |
 			size;
 		
 		//remove the free block from the the old list of free blocks

@@ -23,14 +23,14 @@ void invalid_tss_handler(){
 void segment_not_present_handler(uint16_t selector){
   kprint("ERROR: Segment not present:");
   kprintln_uint32((uint32_t) selector);
-  cli();
+  cli("segment_not_present_handler()");
   halt();
 }
 
 void general_protection_fault_handler(uint32_t error_code){
   kprint("ERROR: General protection fault");
   kprintln_uint32(error_code);
-  cli();
+  cli("general_protection_fault_handler()");
   halt();
 }
 
@@ -46,6 +46,6 @@ void page_fault_handler(){
   kprint("address: ");
   kprintln_uint32(address);
 
-  cli();
+  cli("page_fault_handler()");
   halt();
 }
