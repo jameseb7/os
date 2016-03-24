@@ -83,6 +83,8 @@ void run_next_process(){
 		    kprint_uint32(current_process);
 		    kprintln(" switched");
 		    switch_process(old_process, current_process);
+		  } else {
+		    kprintln("no switch");
 		  }
 		}else{
 			kprint_uint32(current_process);

@@ -60,7 +60,7 @@ void print_A(){
 	for(;;){
 		kprint("A");
 		sti("print_A()");
-		for(i=0; i < 100000000; i++){
+		for(i=0; i < 10000000; i++){
 		}
 	}
 }
@@ -71,7 +71,7 @@ void print_B(){
 		kprint("B");
 		sti("print_B()");
 		// check_process_stack();
-		for(i=0; i < 100000000; i++){
+		for(i=0; i < 10000000; i++){
 		}
 	}
 }

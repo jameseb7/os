@@ -7,6 +7,13 @@ interrupt0x0:
 	popa
 	iret
 
+	.global interrupt0x1
+interrupt0x1:
+	pusha
+	call debug_handler
+	popa
+	iret
+
 	.global interrupt0x8	
 interrupt0x8:	
 	pusha

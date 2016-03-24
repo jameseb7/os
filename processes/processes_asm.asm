@@ -21,12 +21,12 @@ switch_process_asm:
                 pushf
                 pushad
 
-                ;; put the stack pointer in edx and the page directory in eax
-                mov     edx, [ebp + 8]
-                mov     eax, [ebp + 12]
+                ;; put the stack pointer in eax and the page directory in edx
+                mov     eax, [ebp + 8]
+                mov     edx, [ebp + 12]
 
                 ;; load the new page table
-                mov             cr3, eax
+                mov             cr3, edx
 
                 ;; load the new stack pointer and store the old stack pointer
                 xchg    esp, eax
@@ -77,7 +77,8 @@ start_kernel_process:
                 ;; set up the stack frame and push the registers
                 push    ebp
                 mov     ebp, esp
-                pushad
+        	pushad
+		pushf
 
                 ;; put the start function address in edx and the page directory in eax and the stack pointer store in ebx
                 mov     edx, [ebp + 8]

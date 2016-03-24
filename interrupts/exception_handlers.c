@@ -2,6 +2,7 @@
 #include "kutil.h"
 
 void divide_by_zero_handler(void);
+void debug_handler(void);
 void double_fault_handler(void);
 void invalid_tss_handler(void);
 void segment_not_present_handler(uint16_t);
@@ -10,6 +11,9 @@ void page_fault_handler(void);
 
 void divide_by_zero_handler(){
   error("ERROR: Division by zero");
+}
+
+void debug_handler(){
 }
 
 void double_fault_handler(){

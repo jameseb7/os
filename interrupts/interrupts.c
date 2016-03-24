@@ -13,6 +13,7 @@ struct IDT_entry{
 struct IDT_entry idt[256];
 
 extern void interrupt0x0(void);
+extern void interrupt0x1(void);
 extern void interrupt0x8(void);
 extern void interrupt0xA(void);
 extern void interrupt0xB(void);
@@ -40,6 +41,7 @@ void interrupts_init(){
 
 	/*add exception handlers*/
 	add_interrupt_handler(0x00, (uint32_t) interrupt0x0);
+	add_interrupt_handler(0x01, (uint32_t) interrupt0x1);
 	add_interrupt_handler(0x08, (uint32_t) interrupt0x8);
 	add_interrupt_handler(0x0A, (uint32_t) interrupt0xA);
 	add_interrupt_handler(0x0B, (uint32_t) interrupt0xB);
