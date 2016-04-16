@@ -7,7 +7,7 @@ void double_fault_handler(void);
 void invalid_tss_handler(void);
 void segment_not_present_handler(uint16_t);
 void general_protection_fault_handler(uint32_t);
-void page_fault_handler(void);
+void page_fault_handler(uint32_t, uint32_t, uint32_t);
 
 void divide_by_zero_handler(){
   error("ERROR: Division by zero");
@@ -38,17 +38,14 @@ void general_protection_fault_handler(uint32_t error_code){
   halt();
 }
 
-void page_fault_handler(){
-  uint32_t error_code, address;
-
-  __asm__("movl %%cr2, %0" : "=r"(address));
-  __asm__("pop %0" : "=r"(error_code));
-
+void page_fault_handler(uint32_t error_code, uint32_t address, uint32_t instruction_address){
   kprintln("ERROR: Page fault");
   kprint("error code: ");
   kprintln_uint32(error_code);
   kprint("address: ");
   kprintln_uint32(address);
+  kprint("instruction address: ");
+  kprintln_uint32(instruction_address);
 
   cli("page_fault_handler()");
   halt();

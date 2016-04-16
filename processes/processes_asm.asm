@@ -12,34 +12,35 @@ start_kernel_process_str:       db "start_kernel_process()", 0
                 
                 section .text
 
-;;; uint32_t switch_process_asm(uint32_t stack_pointer, uint32_t page_directory)
-                global switch_process_asm
+;;; void switch_process_asm(uint32_t stack_pointer, uint32_t page_directory, uint32_t  * stack_pointer_store);
+        global switch_process_asm
 switch_process_asm:
-                ;; set up the stack frame and push the registers to the stack
-                push    ebp
-                mov     ebp, esp
-                pushf
-                pushad
+        ;; set up the stack frame and push the registers to the stack
+        push    ebp
+        mov     ebp, esp
+        pushf
+        pushad
 
-                ;; put the stack pointer in eax and the page directory in edx
-                mov     eax, [ebp + 8]
-                mov     edx, [ebp + 12]
-
-                ;; load the new page table
-                mov             cr3, edx
-
-                ;; load the new stack pointer and store the old stack pointer
-                xchg    esp, eax
-
-                ;; pop the registers from the stack, preserving the return value in eax
-                mov     [tmp], eax
-                popad
-                mov     eax, [tmp]
-                popf
-
-                ;; end the stack frame and return
-                pop     ebp
-                ret
+        ;; put the stack pointer in eax, the page directory in edx,
+	;; and the store for the old stack pointer in ebx
+        mov     eax, [ebp + 8]
+        mov     edx, [ebp + 12]
+	mov	ebx, [ebp + 16]
+	
+        ;; load the new page table
+        mov     cr3, edx
+	
+        ;; load the new stack pointer and store the old stack pointer
+        xchg    esp, eax
+	mov	[ebx], eax
+	
+        ;; pop the registers from the stack
+        popad
+        popf
+	
+        ;; end the stack frame and return
+        pop     ebp
+        ret
 
 
 ;;; void run_idle_process(uint32_t * stack_pointer_store)
@@ -47,7 +48,8 @@ switch_process_asm:
 run_idle_process:
                 ;; set up the stack frame and push the registers to the stack
                 push    ebp
-                mov     ebp, esp
+        	mov     ebp, esp
+		pushf
                 pushad
 
                 ;; put the stack pointer store in eax
@@ -59,26 +61,25 @@ run_idle_process:
                 ;; set the stack pointer to the kernel bootstrap stack
                 mov     esp, kernel_stack_start
 
-                ;; send the end of interrupt signal     and set the interrupt flag
+                ;; send the end of interrupt signal and set the interrupt flag
                 mov     al, 0x20
                 out     0x20, al                
                 out     0xA0, al
                 sti
-
                 ;; halt and wait for interrupts
 halt_loop:              
                 hlt
                 jmp     halt_loop
 
                 
-;;; void start_kernel_process(void (*start_function)(), uint32_t page_directory, uint32_t * stack_pointer_store)
+;;; uint32_t start_kernel_process(void (*start_function)(), uint32_t page_directory, uint32_t * stack_pointer_store)
                 global start_kernel_process
 start_kernel_process:
-                ;; set up the stack frame and push the registers
-                push    ebp
-                mov     ebp, esp
-        	pushad
+        ;; set up the stack frame and push the registers
+        	push    ebp
+        	mov     ebp, esp
 		pushf
+        	pushad
 
                 ;; put the start function address in edx and the page directory in eax and the stack pointer store in ebx
                 mov     edx, [ebp + 8]
@@ -86,12 +87,12 @@ start_kernel_process:
                 mov     ebx, [ebp + 16]
                 
                 ;; switch to the process' page table
-                mov             cr3, eax
+                mov     cr3, eax
 
                 ;; set the stack pointer to the start of the kernel stack and store the old stack pointer
                 mov     ecx, [process_kernel_stack]
                 xchg    esp, ecx
-                mov     [ebx], ecx
+        	mov     [ebx], ecx
 
                 ;; send the end of interrupt signal
                 mov     al, 0x20

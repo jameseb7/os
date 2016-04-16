@@ -31,11 +31,13 @@ uint16_t process_queue_back = NULL_PROCESS;
 uint16_t current_process = NULL_PROCESS;
 
 void switch_process(uint16_t, uint16_t);
-uint32_t switch_process_asm(uint32_t, uint32_t);
+void switch_process_asm(uint32_t stack_pointer,
+			uint32_t page_directory,
+			uint32_t  * stack_pointer_store);
 void run_idle_process(uint32_t *);
 void start_kernel_process(void (*start_function)(void),
-						  uint32_t page_directory, 
-						  uint32_t * stack_pointer_store);
+			  uint32_t page_directory, 
+			  uint32_t * stack_pointer_store);
 
 void push_to_process_queue(uint16_t);
 uint16_t pop_from_process_queue(void);
@@ -60,9 +62,9 @@ void processes_init(){
 }
 
 void switch_process(uint16_t old_process, uint16_t new_process){
-	process_table[old_process].stack_pointer = 
 		switch_process_asm(process_table[new_process].stack_pointer,
-						   process_table[new_process].page_directory);
+				   process_table[new_process].page_directory,
+				   &process_table[old_process].stack_pointer);
 }
 
 void run_next_process(){
@@ -73,28 +75,32 @@ void run_next_process(){
 	}
 	current_process = pop_from_process_queue();
 
+	// kprint("stored stack pointer: ");
+	// kprintln_uint32(process_table[current_process].stack_pointer);
+
 	if(current_process == NULL_PROCESS){
 		//stop and wait for interrupts if there is no current process
-		kprintln("idle");
+		// kprintln("idle");
 		run_idle_process(&process_table[old_process].stack_pointer);
 	}else{
 		if(process_table[current_process].flags & STARTED){
 		  if (current_process != old_process) {
-		    kprint_uint32(current_process);
-		    kprintln(" switched");
+		    // kprint_uint32(current_process);
+		    // kprintln(" switched");
 		    switch_process(old_process, current_process);
 		  } else {
-		    kprintln("no switch");
+		    // kprintln("no switch");
 		  }
 		}else{
-			kprint_uint32(current_process);
-			kprintln(" started");
-			process_table[current_process].flags |= STARTED;
-			start_kernel_process(process_table[current_process].start_function,
-								 process_table[current_process].page_directory, 
-								 &process_table[old_process].stack_pointer);
+		  // kprint_uint32(current_process);
+		  // kprintln(" started");
+		  process_table[current_process].flags |= STARTED;
+		  start_kernel_process(process_table[current_process].start_function,
+				       process_table[current_process].page_directory, 
+				       &process_table[old_process].stack_pointer);
 		}
 	}
+	// kprintln("run_next_process() finished");
 }
 	
 

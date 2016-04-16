@@ -17,7 +17,8 @@ ASMFLAGS += $(patsubst %, -i%, $(MODULES))
 SRC := 
 include $(patsubst %,%/module.mk,$(MODULES))
 OBJ := 	$(patsubst %.c,%.o,$(filter %.c,$(SRC))) \
-	$(patsubst %.s,%.o,$(filter %.s,$(SRC)))
+	$(patsubst %.s,%.o,$(filter %.s,$(SRC))) \
+	$(patsubst %.asm,%.o,$(filter %.asm, $(SRC)))
 
 DISK := floppy.img
 LOOP := /dev/loop0

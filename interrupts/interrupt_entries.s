@@ -46,15 +46,21 @@ interrupt0xD:
 	pusha
 	push %eax
 	call general_protection_fault_handler
+	pop %eax
 	popa
 	mov tmp, %eax
 	iret
 
 	.global interrupt0xE
-interrupt0xE:	
+interrupt0xE:
+	mov %eax, tmp
+	pop %eax
 	pusha
+	push %eax
 	call page_fault_handler
+	pop %eax
 	popa
+	mov tmp, %eax
 	iret
 
 	.global interrupt0x20
