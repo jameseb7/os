@@ -57,21 +57,18 @@ void interrupt_handler(void){
 
 void print_A(){
   int i = 0;
-	for(;;){
-		kprint("A");
-		sti("print_A()");
-		for(i=0; i < 10000000; i++){
-		}
-	}
+  for(;;){
+    kprint("A");
+    for(i=0; i < 10000000; i++){
+    }
+  }
 }
 
 void print_B(){
   int i = 0;
-	for(;;){
-		kprint("B");
-		sti("print_B()");
-		// check_process_stack();
-		for(i=0; i < 10000000; i++){
-		}
-	}
+  for(;;){
+    kprint("B");
+    for(i=0; i < 10000000; i++){
+    }
+  }
 }
