@@ -79,7 +79,9 @@ void switch_process(uint16_t old_process, uint16_t new_process){
 void run_next_process(){
 	uint16_t old_process = current_process;
 	
-	if(current_process != NULL_PROCESS){ //don't push the null process
+	if(current_process != NULL_PROCESS //don't push the null process
+	   && !(process_table[current_process].flags & BLOCKED) // or blocked process
+		){ 
 		push_to_process_queue(&active_process_queue, current_process);
 	}
 	current_process = pop_from_process_queue(&active_process_queue);
@@ -118,8 +120,10 @@ void suspend_current_process(){
 		return;
 	}
 
-	remove_from_process_queue(&active_process_queue, current_process);
 	process_table[current_process].flags |= BLOCKED;
+	
+	//reschedule since the current process is now suspended
+	run_next_process();
 }
 
 void resume_process(uint16_t process_id){

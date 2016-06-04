@@ -55,20 +55,27 @@ void interrupt_handler(void){
    kprintln("Kernel interrupt");
 }
 
+uint16_t print_A_process = 1;
+uint16_t print_B_process = 2;
+
 void print_A(){
   int i = 0;
+  print_A_process = get_current_process_id();
   for(;;){
     kprint("A");
     for(i=0; i < 10000000; i++){
     }
+	suspend_current_process();
   }
 }
 
 void print_B(){
   int i = 0;
+  print_B_process = get_current_process_id();
   for(;;){
     kprint("B");
     for(i=0; i < 10000000; i++){
     }
+	resume_process(print_A_process);
   }
 }
