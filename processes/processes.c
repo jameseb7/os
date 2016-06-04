@@ -21,7 +21,8 @@ struct process{
 #define MAX_PROCESSES (1 << 16)
 #define NULL_PROCESS 0
 
-#define STARTED 0x00000001
+#define STARTED (1 << 0)
+#define BLOCKED (1 << 1)
 
 //keep index 0 as a null value
 struct process process_table[MAX_PROCESSES];
@@ -30,12 +31,12 @@ struct process_queue{
 	uint16_t front, back;
 };
 
-struct process_queue active_process_queue = {
+static struct process_queue active_process_queue = {
 	.front = NULL_PROCESS,
 	.back = NULL_PROCESS
 };
 
-uint16_t current_process = NULL_PROCESS;
+static uint16_t current_process = NULL_PROCESS;
 
 void switch_process(uint16_t, uint16_t);
 void switch_process_asm(uint32_t stack_pointer,
@@ -110,7 +111,30 @@ void run_next_process(){
 	}
 	// kprintln("run_next_process() finished");
 }
+
+void suspend_current_process(){
+	if (process_table[current_process].flags & BLOCKED){
+		//already blocked, nothing to do
+		return;
+	}
+
+	remove_from_process_queue(&active_process_queue, current_process);
+	process_table[current_process].flags |= BLOCKED;
+}
+
+void resume_process(uint16_t process_id){
+	if (!(process_table[process_id].flags & BLOCKED)){
+		//process not blocked, nothing to do
+		return;
+	}
 	
+	process_table[process_id].flags ^= BLOCKED;
+	push_to_process_queue(&active_process_queue, process_id);
+}
+
+uint16_t get_current_process_id(){
+	return current_process;
+}	
 
 void push_to_process_queue(struct process_queue * queue, uint16_t process_id){
 	if(queue->back == NULL_PROCESS){
