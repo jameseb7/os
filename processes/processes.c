@@ -48,6 +48,7 @@ void start_kernel_process(void (*start_function)(void),
 
 void push_to_process_queue(struct process_queue *,uint16_t);
 uint16_t pop_from_process_queue(struct process_queue *);
+void remove_from_process_queue(struct process_queue *, uint16_t process_id);
 
 extern uint32_t kernel_stack_start;
 
@@ -141,6 +142,26 @@ uint16_t pop_from_process_queue(struct process_queue * queue){
 	process_table[return_value].prev = NULL_PROCESS;
 
 	return return_value;
+}
+
+void remove_from_process_queue(struct process_queue * queue, uint16_t process_id){
+	//check if we're removing the front or back of the process queue and update accordingly
+	if (process_id == queue->front) {
+		queue->front = process_table[process_id].next;
+	}
+	if (process_id == queue->back) {
+		queue->back = process_table[process_id].prev;
+	}
+	
+	//next update the neighboring queue elements
+	uint16_t next_process = process_table[process_id].next;
+	uint16_t prev_process = process_table[process_id].prev;
+	process_table[next_process].prev = prev_process;
+	process_table[prev_process].next = next_process;
+	
+	//zero the identifiers in the removed process to avoid confusion
+	process_table[process_id].prev = NULL_PROCESS;
+	process_table[process_id].next = NULL_PROCESS;
 }
 
 static uint16_t process_counter = 1;
