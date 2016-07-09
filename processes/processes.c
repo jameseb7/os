@@ -138,7 +138,30 @@ void resume_process(uint16_t process_id){
 
 uint16_t get_current_process_id(){
 	return current_process;
-}	
+}
+
+void kill_process(uint16_t process_id){
+	if(process_id == current_process){
+		// removing the current process so no need to extract from queue
+
+		// free page directory
+
+		// clear process information
+		process_table[current_process].page_directory = 0;
+		process_table[current_process].stack_pointer = 0;
+		process_table[current_process].prev = 0;
+		process_table[current_process].next = 0;
+		process_table[current_process].parent = 0;
+		process_table[current_process].children = 0;
+		process_table[current_process].prev_child = 0;
+		process_table[current_process].next_child = 0;
+		process_table[current_process].flags = 0;
+
+		// schedule a new process
+		current_process = NULL_PROCESS;
+		run_next_process();
+	}
+}
 
 void push_to_process_queue(struct process_queue * queue, uint16_t process_id){
 	if(queue->back == NULL_PROCESS){

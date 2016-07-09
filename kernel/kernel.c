@@ -11,6 +11,7 @@ void interrupt_handler(void);
 
 void print_A(void);
 void print_B(void);
+void print_C(void);
 
 void kmain(){
   cli("kmain()");
@@ -44,6 +45,7 @@ void kmain(){
 
   add_process(&print_A);
   add_process(&print_B);
+  add_process(&print_C);
 
   //check_process_stack();
 
@@ -57,6 +59,7 @@ void interrupt_handler(void){
 
 uint16_t print_A_process = 1;
 uint16_t print_B_process = 2;
+uint16_t print_C_process = 3;
 
 void print_A(){
   int i = 0;
@@ -65,6 +68,7 @@ void print_A(){
     kprint("A");
     for(i=0; i < 10000000; i++){
     }
+	resume_process(print_B_process);
 	suspend_current_process();
   }
 }
@@ -76,6 +80,19 @@ void print_B(){
     kprint("B");
     for(i=0; i < 10000000; i++){
     }
+	resume_process(print_C_process);
+	suspend_current_process();
+  }
+}
+
+void print_C(){
+  int i = 0;
+  print_C_process = get_current_process_id();
+  for(;;){
+    kprint("C");
+    for(i=0; i < 10000000; i++){
+    }
 	resume_process(print_A_process);
+	suspend_current_process();
   }
 }
